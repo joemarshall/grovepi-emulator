@@ -12,6 +12,12 @@ module (and to the __init__.py in that module). For many
 things you can just use a generic digital or analog sensor,
 so you don't need to add a new component.
 
+It allows you to replay data from a CSV file (which you could output 
+from your code on a real GrovePI board, or make up in Excel.)
+For CSV files, make sure you have one column that has timestamps 
+Python format (Unix time but floating point), ie. you save the 
+value output by time.time()
+
 See here for details of the GrovePI board.
 http://www.dexterindustries.com/grovepi/
 
