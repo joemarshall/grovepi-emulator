@@ -24,3 +24,7 @@ joe.marshall@nottingham.ac.uk
 To run the emulator, just extract all these files, go to the folder
 and run grovepiemu.py
 
+You need python 2.7 and the wxpython module installed. Should work 
+on 32 or 64 bit Windows, and I see no reason it shouldn't work on
+Mac or Linux.
+
