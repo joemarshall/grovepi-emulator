@@ -20,3 +20,7 @@ http://www.seeedstudio.com/wiki/Grove_System
 
 This is public domain code, written by Joe Marshall 2015.
 joe.marshall@nottingham.ac.uk
+
+To run the emulator, just extract all these files, go to the folder
+and run grovepiemu.py
+

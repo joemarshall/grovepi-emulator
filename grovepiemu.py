@@ -31,14 +31,11 @@ import sys
 # in preference to any that happen to be in the same directory as them
 sys.path=[os.path.join(os.path.abspath(os.path.dirname(__file__)),"fakegrovepi")]+sys.path
 
-import csvplayer
 import components
 import threading
 import time
-import csvmappingdialog
-import stoppablerunner
 import json
-
+import gpe_utils
 
 class PropertyFrame(wx.Frame):
     def __init__(self, sensorObject):
@@ -110,6 +107,7 @@ class Frame(wx.Frame):
         
         menuBar = wx.MenuBar()
         menu = wx.Menu()
+        m_new=menu.Append(wx.ID_NEW, "&New\tCtrl+N", "Clear everything")
         m_open=menu.Append(wx.ID_OPEN, "&Open\tCtrl+O", "Open settings file")
         m_save=menu.Append(wx.ID_SAVE, "&Save\tCtrl+S", "Save settings file")
         m_saveas=menu.Append(wx.ID_SAVEAS, "Save &As\tCtrl+Shift+S", "Save as new settings file")
@@ -118,6 +116,7 @@ class Frame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnSave, m_save)
         self.Bind(wx.EVT_MENU, self.OnSaveAs, m_saveas)
         self.Bind(wx.EVT_MENU, self.OnOpen, m_open)
+        self.Bind(wx.EVT_MENU, self.OnNew, m_new)
         menuBar.Append(menu, "&File")
         
         menu=wx.Menu()
@@ -274,7 +273,7 @@ class Frame(wx.Frame):
             self.scriptNameLabel.SetLabel("GrovePi Python Script: ")
         else:
             self.scriptNameLabel.SetLabel("GrovePi Python Script: %s"%os.path.basename(self.scriptPath))
-            self.scriptRunner=stoppablerunner.StoppableRunner(self.scriptPath)
+            self.scriptRunner=gpe_utils.StoppableRunner(self.scriptPath)
     
     def OnStopPY(self,event):
         if self.scriptRunner!=None and self.scriptRunner.running():
@@ -293,7 +292,7 @@ class Frame(wx.Frame):
             self.player=None
             self.csvName.SetLabel("Replay data: ")
         if self.csvPath!=None:
-            self.player=csvplayer.CSVPlayer(self.csvPath)
+            self.player=gpe_utils.CSVPlayer(self.csvPath)
             self.csvName.SetLabel("Replay data: %s (need to set mapping)"%(self.player.getName()))
             self.OnMapCSV(None,reloadCurrent)
 
@@ -304,8 +303,10 @@ class Frame(wx.Frame):
         return None
         
     def OnMapCSV(self,event,reloadCurrent=False):
+        if self.player==None:
+            return
         if not reloadCurrent:        
-            mapdlg=csvmappingdialog.Dlg(self,self.player.getFieldNames(),self.componentList.values(),self.lastAssignments)
+            mapdlg=gpe_utils.CSVMappingDlg(self,self.player.getFieldNames(),self.componentList.values(),self.lastAssignments)
             if mapdlg.ShowModal()!=wx.ID_OK:
                 return
             self.lastAssignments=mapdlg.getAssignments()
@@ -343,7 +344,22 @@ class Frame(wx.Frame):
             self.OnSaveAs(event)
         else:
             self.saveSettingsIni(self.settingsFile)
-    
+
+    def OnNew(self,event):
+        removals=[]
+        for (pin,type) in self.componentList.keys():
+            removals.append((pin,type))
+        for (pin,type) in removals:
+            self.removeComponent(pin,type)
+        if self.player!=None:
+            self.player.unload()       
+            self.player=None
+            self.csvName.SetLabel("Replay data: ")
+        if self.scriptRunner!=None and self.scriptRunner.running():
+            self.scriptRunner.stop()
+        self.scriptPath=None
+        self.scriptNameLabel.SetLabel("GrovePi Python Script: ")
+            
     def OnSaveAs(self,event):
         openFileDialog = wx.FileDialog(self, "Save GrovePI emulator settings", "", "",
                                        "Grove PI emulator settings files (*.gpi)|*.gpi", wx.FD_SAVE)
@@ -352,6 +368,7 @@ class Frame(wx.Frame):
         self.settingsFile=openFileDialog.GetPath()
         self.SetTitle("GrovePi Emulator - %s"%self.settingsFile)
         self.saveSettingsIni(self.settingsFile)
+    
     
     def OnOpen(self,event):
         openFileDialog = wx.FileDialog(self, "Open GrovePI emulator settings", "", "",

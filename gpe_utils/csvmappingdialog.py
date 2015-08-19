@@ -1,9 +1,9 @@
 import wx
 
-class Dlg(wx.Dialog):
+class CSVMappingDlg(wx.Dialog):
     
     def __init__(self, parent,csvColumns,components,lastMapping):
-        super(Dlg, self).__init__(parent) 
+        super(CSVMappingDlg, self).__init__(parent) 
         
         self.panel = wx.Panel(self)
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -36,18 +36,22 @@ class Dlg(wx.Dialog):
                         st=wx.StaticText(self.panel,label=comp.getAxisName(c))
                         vbox.Add(st,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=10)
                         compCombo=wx.ComboBox(self.panel,style=wx.CB_READONLY)
+                        compCombo.Append("")
                         compCombo.AppendItems(csvColumns)
                         self.combos.append((compCombo,(comp.title(),c)))
                         sensorCombo[(comp.title(),c)]=compCombo
                         vbox.Add(compCombo,flag=wx.EXPAND|wx.RIGHT|wx.LEFT,border=5)
                 else:
                     compCombo=wx.ComboBox(self.panel,style=wx.CB_READONLY)
+                    compCombo.Append("")
                     compCombo.AppendItems(csvColumns)
                     self.combos.append((compCombo,comp.title()))
                     sensorCombo[comp.title()]=compCombo
                     vbox.Add(compCombo,flag=wx.EXPAND|wx.RIGHT|wx.LEFT,border=5)
         if lastMapping!=None:
             for (col,component) in lastMapping.items():
+                if type(component)==list:
+                    component=tuple(component)
                 if component=="TIME":
                     self.timeCombo.SetStringSelection(col)
                 elif sensorCombo.has_key(component):
@@ -70,7 +74,7 @@ class Dlg(wx.Dialog):
         if self.timeCombo.GetSelection()!=wx.NOT_FOUND:
             anySelected=False
             for box,comp in self.combos:
-                if box.GetSelection()!=wx.NOT_FOUND:
+                if box.GetSelection()!=wx.NOT_FOUND and len(box.GetStringSelection())>0:
                     anySelected=True
             if not anySelected:
                 wx.MessageBox('You need to select at least one mapping from CSV column to sensor', 'Error', 
@@ -82,7 +86,7 @@ class Dlg(wx.Dialog):
             return True
         self.mapping={self.timeCombo.GetStringSelection():"TIME"}
         for combo,data in self.combos:
-            if combo.GetSelection()!=wx.NOT_FOUND:
+            if combo.GetSelection()!=wx.NOT_FOUND and len(combo.GetStringSelection())>0:
                 self.mapping[combo.GetStringSelection()]=data
         event.Skip()
         return False
