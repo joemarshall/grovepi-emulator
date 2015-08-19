@@ -2,25 +2,26 @@ import wx
 
 class CSVMappingDlg(wx.Dialog):
     
-    def __init__(self, parent,csvColumns,components,lastMapping):
+    def __init__(self, parent,csvColumns,components,lastMapping,needsTime):
         super(CSVMappingDlg, self).__init__(parent) 
-        
+        self.needsTime=needsTime
         self.panel = wx.Panel(self)
         vbox = wx.BoxSizer(wx.VERTICAL)
-        #  need a time column
-        self.timeCombo=wx.ComboBox(self.panel,style=wx.CB_READONLY)
-        self.timeCombo.AppendItems(csvColumns)
         
         self.combos=[]
         self.mapping={}
         self.timeColumn=None
         
 
-        st=wx.StaticText(self.panel,label="Time column (required)")
-        st.SetBackgroundColour((0,0,0))
-        st.SetForegroundColour((255,255,255))
-        vbox.Add(st)
-        vbox.Add(self.timeCombo)
+        if needsTime:
+            st=wx.StaticText(self.panel,label="Time column (required)")
+            st.SetBackgroundColour((0,0,0))
+            st.SetForegroundColour((255,255,255))
+            vbox.Add(st)
+            #  need a time column
+            self.timeCombo=wx.ComboBox(self.panel,style=wx.CB_READONLY)
+            self.timeCombo.AppendItems(csvColumns)
+            vbox.Add(self.timeCombo)
         
         
         sensorCombo={}
@@ -52,7 +53,7 @@ class CSVMappingDlg(wx.Dialog):
             for (col,component) in lastMapping.items():
                 if type(component)==list:
                     component=tuple(component)
-                if component=="TIME":
+                if component=="TIME" and self.needsTime:
                     self.timeCombo.SetStringSelection(col)
                 elif sensorCombo.has_key(component):
                     sensorCombo[component].SetStringSelection(col)
@@ -71,7 +72,7 @@ class CSVMappingDlg(wx.Dialog):
         vbox.Fit(self)
         
     def OnOK(self,event):
-        if self.timeCombo.GetSelection()!=wx.NOT_FOUND:
+        if not self.needsTime or self.timeCombo.GetSelection()!=wx.NOT_FOUND:
             anySelected=False
             for box,comp in self.combos:
                 if box.GetSelection()!=wx.NOT_FOUND and len(box.GetStringSelection())>0:
@@ -84,7 +85,8 @@ class CSVMappingDlg(wx.Dialog):
             wx.MessageBox('You need to select a column with the time in it', 'Error', 
                 wx.OK | wx.ICON_WARNING)
             return True
-        self.mapping={self.timeCombo.GetStringSelection():"TIME"}
+        if self.needsTime:
+            self.mapping={self.timeCombo.GetStringSelection():"TIME"}
         for combo,data in self.combos:
             if combo.GetSelection()!=wx.NOT_FOUND and len(combo.GetStringSelection())>0:
                 self.mapping[combo.GetStringSelection()]=data

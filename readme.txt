@@ -18,6 +18,19 @@ For CSV files, make sure you have one column that has timestamps
 Python format (Unix time but floating point), ie. you save the 
 value output by time.time()
 
+Also supports reading data from a webserver via JSON at 1hz update
+rate. Data should be in the format:
+{"sound":56,"temperature":491,"light":728,"button":32767,"motion":0,
+"ultrasonic":1059,"touch":32767}
+ie. sensorname:value pairs. For digital sensors you can treat them in two
+ways - one is to just send the raw data, which risks missing short 
+presses. The other is to send them as 'seconds since last press' 
+and round them down. When choosing your column mapping in the program
+you can select -TIME_SINCE_PRESSED versions of each column for this.
+
+The JSON code is flaky and runs network code in the UI thread, but works
+okay as long as your server is live.
+
 See here for details of the GrovePI board.
 http://www.dexterindustries.com/grovepi/
 

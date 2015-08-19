@@ -1,25 +1,5 @@
-# replay design:
+# Todo: RFID module, RFID tag module
 #
-# open csv file from file chooser
-#
-# if it has multiple axes, then we should probably consider what happens if updates are run while the thread code is running - do we need to make the updates atomic somehow?
-# we could do that by using a lock in the 'getmagnetometer' 'get accelerometer' type methods
-# or by using bdb debugging to pause the whole user program?
-#
-# chooser for what script is running
-# and a way to restart it / stop it (using the stoppable runner class?)
-#
-# save and load of setup
-# needs to save and load 
-# a)which things are connected 
-# b)any config settings on them e.g.LED colour, generic digital pullup (and what?). Most modules won't have any config I think
-# c)the name/path of the currently loaded python script
-# d)the (last)mapping for playback
-# e)currently loaded csv file
-# 
-# autosave on quit / load to .ini and allow saving deliberately too?
-# 
-# what about RFID tag module - maybe just have config setting with memory state, not CSV file support
 # 
 
 import wx
@@ -36,6 +16,7 @@ import threading
 import time
 import json
 import gpe_utils
+import urllib2
 
 class PropertyFrame(wx.Frame):
     def __init__(self, sensorObject):
@@ -176,7 +157,7 @@ class Frame(wx.Frame):
         transportBox=wx.BoxSizer(wx.HORIZONTAL)
         timeBox=wx.FlexGridSizer(2,2)
         self.csvName=wx.StaticText(self.panel,label="Replay: ")
-        transportButtons=[("Load...",self.OnLoadCSV),("[]",self.OnStopCSV),("||",self.OnPauseCSV),(">",self.OnPlayCSV),("Remap Fields...",self.OnMapCSV)]
+        transportButtons=[("Load...",self.OnLoadCSV),("[]",self.OnStopCSV),("||",self.OnPauseCSV),(">",self.OnPlayCSV),("Map Fields...",self.OnMapCSV),("JSON Url",self.OnJSONConnect)]
         self.csvButtons={}
         for(label,fn) in transportButtons:
             button=wx.Button(self.panel,wx.ID_ANY,label,style=wx.BU_EXACTFIT)
@@ -279,6 +260,28 @@ class Frame(wx.Frame):
         if self.scriptRunner!=None and self.scriptRunner.running():
             self.scriptRunner.stop()
         
+    def OnJSONConnect(self,event,reloadCurrent=False):
+        if not reloadCurrent:
+            oldPath="http://www.cs.nott.ac.uk/~jqm/sensorvalues.php?id=2"
+            if self.csvPath.lower().startswith("http://"):
+                oldPath=self.csvPath
+            selectURLDialog= wx.TextEntryDialog(self,"Enter a URL to remote sensor data JSON","Connect to JSON Sensor Server",defaultValue=oldPath)
+            if selectURLDialog.ShowModal()==wx.ID_CANCEL:
+                return
+            self.csvPath=selectURLDialog.GetValue()
+            if not self.csvPath.lower().startswith("http://"):
+                self.csvPath="http://"+self.csvPath
+        if self.player!=None:
+            self.player.unload()
+            self.player=None
+            self.csvName.SetLabel("Replay data: ")
+        if self.csvPath!=None:
+            self.player=gpe_utils.JSONPlayer(self.csvPath)
+            self.csvName.SetLabel("Replay url: %s (need to set mapping)"%(self.player.getName()))
+            self.OnMapCSV(None,reloadCurrent)
+            
+            
+        
     def OnLoadCSV(self,event,reloadCurrent=False):
         if not reloadCurrent:
             openFileDialog = wx.FileDialog(self, "Open CSV file for data playback", "", "",
@@ -306,7 +309,7 @@ class Frame(wx.Frame):
         if self.player==None:
             return
         if not reloadCurrent:        
-            mapdlg=gpe_utils.CSVMappingDlg(self,self.player.getFieldNames(),self.componentList.values(),self.lastAssignments)
+            mapdlg=gpe_utils.CSVMappingDlg(self,self.player.getFieldNames(),self.componentList.values(),self.lastAssignments,isinstance(self.player,gpe_utils.CSVPlayer))
             if mapdlg.ShowModal()!=wx.ID_OK:
                 return
             self.lastAssignments=mapdlg.getAssignments()
@@ -323,9 +326,14 @@ class Frame(wx.Frame):
                 colDesc=self.findComponentByName(dest)
                 if colDesc!=None:
                     assignmentsFixed[col]=colDesc
-        if timeColumn!=None and len(assignmentsFixed)>0:
-            self.player.setFieldAssignments(timeColumn,assignmentsFixed)
-            self.csvName.SetLabel("Replay data: %s"%(self.player.getName()))
+        if isinstance(self.player,gpe_utils.JSONPlayer):
+            if len(assignmentsFixed)>0:
+                self.player.setFieldAssignments(assignmentsFixed)
+                self.csvName.SetLabel("Replay data: %s"%(self.player.getName()))
+        else:
+            if timeColumn!=None and len(assignmentsFixed)>0:
+                self.player.setFieldAssignments(timeColumn,assignmentsFixed)
+                self.csvName.SetLabel("Replay data: %s"%(self.player.getName()))
         
     def OnStopCSV(self,event):
         if self.player!=None:
@@ -424,7 +432,10 @@ Currently has support for the following sensors:
                 self.lastAssignments=allConfig["sensorAssignments"]
                 self.csvPath=self.fullPath(allConfig["csvPath"],name)
                 # reload the CSV file and sensor assignments
-                self.OnLoadCSV(None,True)
+                if self.csvPath.lower().startswith("http://"):
+                    self.OnJSONConnect(None,True)
+                else:
+                    self.OnLoadCSV(None,True)
                 self.OnLoadPY(None,True)
                 if fromIni:
                     self.settingsFile=self.fullPath(allConfig["currentFileOpen"],name) 
@@ -439,11 +450,15 @@ Currently has support for the following sensors:
     def fullPath(self,file,name):
         if file==None:
             return None
+        if file.lower().startswith("http://"):
+            return file
         return os.path.abspath(os.path.join(os.path.dirname(name),file))
             
     def relPath(self,file,name):
         if file==None:
             return None
+        if file.lower().startswith("http://"):
+            return file
         return os.path.relpath(file,os.path.dirname(os.path.abspath(name)))
             
     def saveSettingsIni(self,name):
