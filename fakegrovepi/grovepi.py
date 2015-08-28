@@ -32,7 +32,8 @@ def digitalRead(pin):
         return 0
     return digValues[pin]
   else:
-    print "Error, trying to read from pin set to output"
+    print "Error, trying to read from pin set to output: %d"%pin
+    print "Pinmodes:",pinModes
     return 0
 
 def analogRead(pin):
@@ -52,7 +53,12 @@ def temp(pin):
   
   
 def pinMode(pin,mode):
+  if mode=="INPUT":
+    mode=INPUT
+  elif mode=="OUTPUT":
+    mode=OUTPUT
   pinModes[pin]=mode
+  print "Mode changed",pinModes
   
 for c in range(0,9):
   digValues[c]=0
