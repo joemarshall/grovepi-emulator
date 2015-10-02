@@ -8,8 +8,6 @@ pinModes={}
 # what is written to it (or pull up if in input mode) - in 0 - 255 form
 outValues={}
 
-INPUT=0
-OUTPUT=1
 
 # check for this if your code has to know whether it is in the emulator
 IS_EMULATOR=True
@@ -18,15 +16,15 @@ def digitalWrite(pin, value):
   outValues[pin]=value*255
   
 def analogWrite(pin,value):
-    if pinModes[pin]==INPUT:
-        print "Error, trying to analog write to pin set as input"
+    if pinModes[pin]=="INPUT":
+        print "Error, trying to analog write to pin set as INPUT"
     if pin!=3 and pin!=5 and pin!=6:
         print "Can't analog write on pins other than 3,5 or 6"
     else:
         outValues[pin]=value
   
 def digitalRead(pin):
-  if pinModes[pin]==INPUT:  
+  if pinModes[pin]=="INPUT":  
     if digValues[pin]>1:
         print "Error, trying to digital read from ultrasonic transducer"
         return 0
@@ -53,16 +51,11 @@ def temp(pin):
   
   
 def pinMode(pin,mode):
-  if mode=="INPUT":
-    mode=INPUT
-  elif mode=="OUTPUT":
-    mode=OUTPUT
   pinModes[pin]=mode
-  print "Mode changed",pinModes
   
 for c in range(0,9):
   digValues[c]=0
   anaValues[c]=0
-  pinModes[c]=INPUT
+  pinModes[c]="INPUT"
   outValues[c]=0
               

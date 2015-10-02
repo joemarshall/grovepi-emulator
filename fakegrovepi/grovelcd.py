@@ -1,12 +1,9 @@
-
-
 curLCDText=[" "]*32  
 curRGB=(0,0,0)
 
 def setText(text,clear=False):
     global curLCDText
-    if clear:
-        curLCDText=[" "]*32  
+    curLCDText=[" "]*32  
     col=0
     row=0
     c=0

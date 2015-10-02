@@ -69,6 +69,9 @@ class CSVPlayer:
             self.timer.Stop()
             self.timer=None
         
+    def playing(self):
+        return (self.timer!=None)
+
     def unload(self):
         self.stopPlaying()
     

@@ -2,7 +2,7 @@ import grovepi
 import grovelcd
 from time import sleep
 
-grovepi.pinMode(3,grovepi.OUTPUT)
+grovepi.pinMode(3,"OUTPUT")
 
 
 

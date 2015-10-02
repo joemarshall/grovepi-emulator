@@ -39,5 +39,6 @@ class GroveLCDDisplay:
         colour=grovelcd.curRGB
         line1="".join(text[0:16])
         line2="".join(text[16:32])
-        self.label.SetBackgroundColour(wx.Colour(*colour))
+        thisColour=(128+colour[0]*0.5,128+colour[1]*0.5,128+colour[2]*0.5)
+        self.label.SetBackgroundColour(wx.Colour(*thisColour))
         self.label.SetLabel("%s\n%s"%(line1,line2))

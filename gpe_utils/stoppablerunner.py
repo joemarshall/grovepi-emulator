@@ -19,6 +19,7 @@ class StoppableRunner(bdb.Bdb):
         return thd
     
     def _runThread(self,name):
+        sys.argv=[]
         self.run('execfile(\'%s\')'%(name.replace('\\','\\\\')))
         
     def stop(self):

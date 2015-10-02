@@ -155,13 +155,20 @@ class Frame(wx.Frame):
         # CSV file transport, chooser, mapper
         csvBox=wx.BoxSizer(wx.VERTICAL)
         transportBox=wx.BoxSizer(wx.HORIZONTAL)
+        transportBox2=wx.BoxSizer(wx.HORIZONTAL)
         timeBox=wx.FlexGridSizer(2,2)
         self.csvName=wx.StaticText(self.panel,label="Replay: ")
-        transportButtons=[("Load...",self.OnLoadCSV),("[]",self.OnStopCSV),("||",self.OnPauseCSV),(">",self.OnPlayCSV),("Map Fields...",self.OnMapCSV),("JSON Url",self.OnJSONConnect)]
+        transportButtons=[("Unload..",self.OnUnloadCSV),("File..",self.OnLoadCSV),("Server...",self.OnServerConnect)]
+        transportButtons2=[("[]",self.OnStopCSV),("||",self.OnPauseCSV),(">",self.OnPlayCSV),("Map Fields...",self.OnMapCSV)]
         self.csvButtons={}
         for(label,fn) in transportButtons:
             button=wx.Button(self.panel,wx.ID_ANY,label,style=wx.BU_EXACTFIT)
             transportBox.Add(button)
+            self.csvButtons[label]=button
+            button.Bind(wx.EVT_BUTTON,fn)
+        for(label,fn) in transportButtons2:
+            button=wx.Button(self.panel,wx.ID_ANY,label,style=wx.BU_EXACTFIT)
+            transportBox2.Add(button)
             self.csvButtons[label]=button
             button.Bind(wx.EVT_BUTTON,fn)
         
@@ -179,6 +186,7 @@ class Frame(wx.Frame):
             
         csvBox.Add(self.csvName)
         csvBox.Add(transportBox)
+        csvBox.Add(transportBox2)
         csvBox.Add(timeBox)
         self.sizer.Add(csvBox,(7,2),flag=wx.EXPAND)
         
@@ -188,7 +196,7 @@ class Frame(wx.Frame):
         self.scriptStatus=wx.StaticText(self.panel,label="")
         
         pyButtonBox=wx.BoxSizer(wx.HORIZONTAL)
-        pyButtons=[("Load...",self.OnLoadPY),("[]",self.OnStopPY),(">",self.OnRunPY)]
+        pyButtons=[("Load...",self.OnLoadPY),("Clear",self.OnClearPY),("[]",self.OnStopPY),(">",self.OnRunPY)]
         self.scriptButtons={}
         for(label,fn) in pyButtons:
             button=wx.Button(self.panel,wx.ID_ANY,label,style=wx.BU_EXACTFIT)
@@ -209,15 +217,6 @@ class Frame(wx.Frame):
             self.sizer.AddGrowableRow(i)
             
  
-#        self.addComponent(components.GroveLED(3),"D")
-#        self.addComponent(components.GroveUltrasonic(2),"D")
-#        self.addComponent(components.GenericDigital(4),"D")
-#        self.addComponent(components.GroveSound(0),"A")
-#        self.addComponent(components.GroveTemperature(1),"A")
-
-#        self.addComponent(components.GroveSixAxisAccelerometer(1),"I")
-
-        
  
         self.panel.SetSizer(self.sizer)
         self.panel.Layout()
@@ -236,8 +235,18 @@ class Frame(wx.Frame):
         self.lastAssignments={}
         self.settingsFile=None
         self.csvPath=None
-        self.loadSettingsIni(os.path.join(os.path.dirname(__file__),"grovepiemu.ini"),True)
+        if len(sys.argv)>1:
+            self.settingsFile=sys.argv[1]
+            self.loadSettingsIni(sys.argv[1])
+            if self.settingsFile!=None:
+               self.SetTitle("GrovePi Emulator - %s"%self.settingsFile)
+        else:
+            self.loadSettingsIni(os.path.join(os.path.dirname(__file__),"grovepiemu.ini"),True)
 
+    def OnClearPY(self,event):
+        self.scriptPath=None
+        self.OnRunPY(event)
+            
     def OnLoadPY(self,event,reloadCurrent=False):
         if not reloadCurrent:
             openFileDialog = wx.FileDialog(self, "Open Python script to run", "", "",
@@ -260,6 +269,26 @@ class Frame(wx.Frame):
         if self.scriptRunner!=None and self.scriptRunner.running():
             self.scriptRunner.stop()
         
+    def OnServerConnect(self,event,reloadCurrent=False):
+        if not reloadCurrent:
+            oldPath="http://www.cs.nott.ac.uk/~pszjm2/sensordata/?id=1"
+            if self.csvPath.lower().startswith("http://"):
+                oldPath=self.csvPath
+            selectURLDialog= wx.TextEntryDialog(self,"Enter a URL to remote sensor data","Connect to sensor server",defaultValue=oldPath)
+            if selectURLDialog.ShowModal()==wx.ID_CANCEL:
+                return
+            self.csvPath=selectURLDialog.GetValue()
+            if not self.csvPath.lower().startswith("http://"):
+                self.csvPath="http://"+self.csvPath
+        if self.player!=None:
+            self.player.unload()
+            self.player=None
+            self.csvName.SetLabel("Replay data: ")
+        if self.csvPath!=None:
+            self.player=gpe_utils.ServerPlayer(self.csvPath)
+            self.csvName.SetLabel("Replay url: %s (need to set mapping)"%(self.player.getName()))
+            self.OnMapCSV(None,reloadCurrent)
+
     def OnJSONConnect(self,event,reloadCurrent=False):
         if not reloadCurrent:
             oldPath="http://www.cs.nott.ac.uk/~jqm/sensorvalues.php?id=2"
@@ -281,6 +310,13 @@ class Frame(wx.Frame):
             self.OnMapCSV(None,reloadCurrent)
             
             
+    def OnUnloadCSV(self,event):
+        if self.player!=None:
+            self.player.unload()       
+            self.player=None
+            self.csvName.SetLabel("Replay data: ")
+            self.csvPath=""
+        
         
     def OnLoadCSV(self,event,reloadCurrent=False):
         if not reloadCurrent:
@@ -326,10 +362,11 @@ class Frame(wx.Frame):
                 colDesc=self.findComponentByName(dest)
                 if colDesc!=None:
                     assignmentsFixed[col]=colDesc
-        if isinstance(self.player,gpe_utils.JSONPlayer):
+        if isinstance(self.player,gpe_utils.ServerPlayer):
             if len(assignmentsFixed)>0:
                 self.player.setFieldAssignments(assignmentsFixed)
                 self.csvName.SetLabel("Replay data: %s"%(self.player.getName()))
+                self.player.startPlaying(self,True)
         else:
             if timeColumn!=None and len(assignmentsFixed)>0:
                 self.player.setFieldAssignments(timeColumn,assignmentsFixed)
@@ -345,7 +382,7 @@ class Frame(wx.Frame):
         
     def OnPlayCSV(self,event):
         if self.player!=None:
-            self.player.startPlaying(self,True)
+            self.player.startPlaying(self,True)                       
             
     def OnSave(self,event):
         if self.settingsFile==None:
@@ -430,17 +467,20 @@ Currently has support for the following sensors:
                 # go through each module, a)creating it, b)setting the config if there is any
                 self.scriptPath=self.fullPath(allConfig["pythonScript"],name)
                 self.lastAssignments=allConfig["sensorAssignments"]
-                self.csvPath=self.fullPath(allConfig["csvPath"],name)
-                # reload the CSV file and sensor assignments
-                if self.csvPath.lower().startswith("http://"):
-                    self.OnJSONConnect(None,True)
+                if allConfig["csvPath"] and len(allConfig["csvPath"])>0:
+                    self.csvPath=self.fullPath(allConfig["csvPath"],name)
+                    # reload the CSV file and sensor assignments
+                    if self.csvPath.lower().startswith("http://"):
+                        self.OnServerConnect(None,True)
+                    else:
+                        self.OnLoadCSV(None,True)
                 else:
-                    self.OnLoadCSV(None,True)
+                    self.OnUnloadCSV(None)
                 self.OnLoadPY(None,True)
-                if fromIni:
-                    self.settingsFile=self.fullPath(allConfig["currentFileOpen"],name) 
-                    if self.settingsFile!=None:
-                        self.SetTitle("GrovePi Emulator - %s"%self.settingsFile)
+ #               if fromIni:
+ #                   self.settingsFile=self.fullPath(allConfig["currentFileOpen"],name) 
+ #                   if self.settingsFile!=None:
+ #                       self.SetTitle("GrovePi Emulator - %s"%self.settingsFile)
 
         except IOError:
             print "Couldn't load config ",name
@@ -475,7 +515,7 @@ Currently has support for the following sensors:
             allConfig["pythonScript"]=self.relPath(self.scriptPath,name)
             allConfig["sensorAssignments"]=self.lastAssignments
             allConfig["csvPath"]=self.relPath(self.csvPath,name)
-            allConfig["currentFileOpen"]=self.relPath(self.settingsFile,name)
+#            allConfig["currentFileOpen"]=self.relPath(self.settingsFile,name)
             json.dump(allConfig,file)
     
     # a)which things are connected 
@@ -579,6 +619,14 @@ Currently has support for the following sensors:
             ofsTime,realTime=self.player.getTimes()
             self.csvTimeStart.SetLabel(time.strftime("%H:%M:%S",time.gmtime(ofsTime)))
             self.csvTimeReal.SetLabel(time.strftime("%H:%M:%S (%d/%m/%Y)",time.gmtime(realTime)))
+        if self.player==None or not self.player.playing():
+            self.csvButtons[">"].SetBackgroundColour((128,150,128))
+            self.csvButtons["[]"].SetBackgroundColour((255,0,0))
+            self.csvButtons["||"].SetBackgroundColour((255,0,0))
+        else:
+            self.csvButtons[">"].SetBackgroundColour((0,255,0))
+            self.csvButtons["[]"].SetBackgroundColour((150,128,128))
+            self.csvButtons["||"].SetBackgroundColour((150,128,128))
         if self.scriptRunner!=None:
             if self.scriptRunner.running():
                 self.scriptStatus.SetLabel("Running")
