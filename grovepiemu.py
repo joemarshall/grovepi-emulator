@@ -272,7 +272,7 @@ class Frame(wx.Frame):
     def OnServerConnect(self,event,reloadCurrent=False):
         if not reloadCurrent:
             oldPath="http://www.cs.nott.ac.uk/~pszjm2/sensordata/?id=1"
-            if self.csvPath.lower().startswith("http://"):
+            if self.csvPath!=None and self.csvPath.lower().startswith("http://"):
                 oldPath=self.csvPath
             selectURLDialog= wx.TextEntryDialog(self,"Enter a URL to remote sensor data","Connect to sensor server",defaultValue=oldPath)
             if selectURLDialog.ShowModal()==wx.ID_CANCEL:
