@@ -8,8 +8,11 @@ import json
 class ServerPlayer:
     def __init__(self,name):
         self.filename=name
-
         resp=urllib2.urlopen(self.filename,timeout=5)
+        try:
+          self.updateRate=int(resp.info()["Update-Rate"])
+        except KeyError:
+          self.updateRate=250
         header=resp.readline()
         self.fields=header.split(",")
         self.timestamp=0
@@ -59,21 +62,24 @@ class ServerPlayer:
     
     def onTimerFired(self,event):
         # use a short timeout as this connection should be cached now
-        resp=urllib2.urlopen(self.filename,timeout=1)
-        header=resp.readline().split(",")
-        srcvals=resp.readline().split(",")
-        values={}
-        for key,val in zip(header,srcvals):
-            try:
-                values[key]=int(val)
-            except ValueError:
-                values[key]=float(val)
-        for (key,target) in self.assignments.iteritems():
-            if type(target)!=tuple:
-                target.setValue(values[key])
-            else:
-                t,channel=target
-                t.setValue(channel,values[key])
-        self.timer.Start(250,True)
-        self.timestamp=values['timestamp']
+        try:
+            resp=urllib2.urlopen(self.filename,timeout=1)
+            header=resp.readline().split(",")
+            srcvals=resp.readline().split(",")
+            values={}
+            for key,val in zip(header,srcvals):
+                try:
+                    values[key]=int(val)
+                except ValueError:
+                    values[key]=float(val)
+            for (key,target) in self.assignments.iteritems():
+                if type(target)!=tuple:
+                    target.setValue(values[key])
+                else:
+                    t,channel=target
+                    t.setValue(channel,values[key])
+            self.timestamp=values['timestamp']
+        except IOError:
+            print "URL open failed"
+        self.timer.Start(self.updateRate,True)
 

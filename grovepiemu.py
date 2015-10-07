@@ -285,9 +285,14 @@ class Frame(wx.Frame):
             self.player=None
             self.csvName.SetLabel("Replay data: ")
         if self.csvPath!=None:
-            self.player=gpe_utils.ServerPlayer(self.csvPath)
-            self.csvName.SetLabel("Replay url: %s (need to set mapping)"%(self.player.getName()))
-            self.OnMapCSV(None,reloadCurrent)
+            try:
+                self.player=gpe_utils.ServerPlayer(self.csvPath)
+                self.csvName.SetLabel("Replay url: %s (need to set mapping)"%(self.player.getName()))
+                self.OnMapCSV(None,reloadCurrent)
+            except IOError:
+                self.player=None
+                self.csvName.SetLabel("Replay data: ")
+                self.csvPath=None
 
     def OnJSONConnect(self,event,reloadCurrent=False):
         if not reloadCurrent:
@@ -482,8 +487,8 @@ Currently has support for the following sensors:
  #                   if self.settingsFile!=None:
  #                       self.SetTitle("GrovePi Emulator - %s"%self.settingsFile)
 
-        except IOError:
-            print "Couldn't load config ",name
+ #       except IOError:
+ #           print "Couldn't load config ",name
         except KeyError:
             print "Key missing"
 
@@ -502,21 +507,24 @@ Currently has support for the following sensors:
         return os.path.relpath(file,os.path.dirname(os.path.abspath(name)))
             
     def saveSettingsIni(self,name):
-        with open(name,'w') as file:
-            allConfig={}
-            modules={}
-            for (pin,type),component in self.componentList.items():
-                modConfig=None
-                if hasattr(component,"saveConfig"):
-                    modConfig=component.saveConfig()
-                modules["%d%s"%(pin,type)]=[component.classDescription(),modConfig]
-            allConfig["modules"]=modules
-            
-            allConfig["pythonScript"]=self.relPath(self.scriptPath,name)
-            allConfig["sensorAssignments"]=self.lastAssignments
-            allConfig["csvPath"]=self.relPath(self.csvPath,name)
-#            allConfig["currentFileOpen"]=self.relPath(self.settingsFile,name)
-            json.dump(allConfig,file)
+        try:
+            with open(name,'w') as file:
+                allConfig={}
+                modules={}
+                for (pin,type),component in self.componentList.items():
+                    modConfig=None
+                    if hasattr(component,"saveConfig"):
+                        modConfig=component.saveConfig()
+                    modules["%d%s"%(pin,type)]=[component.classDescription(),modConfig]
+                allConfig["modules"]=modules
+                
+                allConfig["pythonScript"]=self.relPath(self.scriptPath,name)
+                allConfig["sensorAssignments"]=self.lastAssignments
+                allConfig["csvPath"]=self.relPath(self.csvPath,name)
+    #            allConfig["currentFileOpen"]=self.relPath(self.settingsFile,name)
+                json.dump(allConfig,file)
+        except IOError:
+            print "Couldn't save settings file"
     
     # a)which things are connected 
 # b)any config settings on them e.g.LED colour, generic digital pullup (and what?). Most modules won't have any config I think
