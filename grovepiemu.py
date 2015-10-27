@@ -550,8 +550,8 @@ Currently has support for the following sensors:
                 if type=="D":
                     menu = wx.Menu()
                     for index,classObj in enumerate(components.digitalSensors):
-                        menu.Append(index,classObj.classDescription())
-                        wx.EVT_MENU(menu,index,self.OnSelectDig)
+                        menu.Append(index+1,classObj.classDescription())
+                        wx.EVT_MENU(menu,index+1,self.OnSelectDig)
                     menu.AppendSeparator()
                     for index,classObj in enumerate(components.digitalOutputs):
                         menu.Append(index+1000,classObj.classDescription())
@@ -559,33 +559,34 @@ Currently has support for the following sensors:
                 elif type=="A":
                     menu = wx.Menu()
                     for index,classObj in enumerate(components.analogSensors):
-                        menu.Append(index,classObj.classDescription())
-                        wx.EVT_MENU(menu,index,self.OnSelectAna)
+                        menu.Append(index+1,classObj.classDescription())
+                        wx.EVT_MENU(menu,index+1,self.OnSelectAna)
                 elif type=="I":
                     menu = wx.Menu()
                     for index,classObj in enumerate(components.i2cConnections):
-                        menu.Append(index,classObj.classDescription())
-                        wx.EVT_MENU(menu,index,self.OnSelectI2c)
+                        menu.Append(index+1,classObj.classDescription())
+                        wx.EVT_MENU(menu,index+1,self.OnSelectI2c)
                 self.menuSelection=None
                 if self.componentList.has_key((pin,type)):
                     menu.AppendSeparator()
                     menu.Append(999,"Disconnect "+self.componentList[(pin,type)].title())
                     wx.EVT_MENU(menu,999,self.OnDeleteComponent)
                     self.selectedComponent=(pin,type)
+                    
                 if self.PopupMenu( menu, posHere ) and self.menuSelection!=None:
-                    self.addComponent(self.menuSelection(pin),type)
+                    wx.CallAfter(self.addComponent, self.menuSelection(pin),type)
 
     def OnSelectDig(self,event):
         if event.GetId()<1000:
-            self.menuSelection= components.digitalSensors[event.GetId()]
+            self.menuSelection= components.digitalSensors[event.GetId()-1]
         else:
             self.menuSelection= components.digitalOutputs[event.GetId()-1000]
         
     def OnSelectAna(self,event):
-        self.menuSelection= components.analogSensors[event.GetId()]
+        self.menuSelection= components.analogSensors[event.GetId()-1]
 
     def OnSelectI2c(self,event):
-        self.menuSelection= components.i2cConnections[event.GetId()]
+        self.menuSelection= components.i2cConnections[event.GetId()-1]
         
     def OnDeleteComponent(self,event):
         self.removeComponent(*self.selectedComponent)
@@ -606,7 +607,6 @@ Currently has support for the following sensors:
             if item.GetWindow()!=None:
                 item.GetWindow().Bind(wx.EVT_RIGHT_DOWN,self.OnContextMenu)
         self.panel.Layout()
-
                 
     def removeComponent(self,pin,type):
         if self.componentList.has_key((pin,type)):
@@ -642,7 +642,7 @@ Currently has support for the following sensors:
                 self.scriptStatus.SetLabel("Stopped")
         else:
             self.scriptStatus.SetLabel("No script loaded")
-                
+        
     def OnClose(self, event):
         if self.scriptRunner!=None and self.scriptRunner.running():
             self.scriptRunner.stop()
