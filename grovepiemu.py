@@ -208,6 +208,10 @@ class Frame(wx.Frame):
         scriptBox.Add(self.scriptStatus)
         scriptBox.Add(pyButtonBox)
         
+        self.captureScriptButton=wx.Button(self.panel,wx.ID_ANY,"Capture script to file")
+        self.captureScriptButton.Bind(wx.EVT_BUTTON,self.OnCaptureToFile)
+        scriptBox.Add(self.captureScriptButton)
+        
         self.sizer.Add(scriptBox,(7,1),flag=wx.EXPAND)            
             
         for i in range(3):
@@ -235,6 +239,7 @@ class Frame(wx.Frame):
         self.lastAssignments={}
         self.settingsFile=None
         self.csvPath=None
+        self.nextCaptureFile=None
         if len(sys.argv)>1:
             self.settingsFile=sys.argv[1]
             self.loadSettingsIni(sys.argv[1])
@@ -243,6 +248,19 @@ class Frame(wx.Frame):
         else:
             self.loadSettingsIni(os.path.join(os.path.dirname(__file__),"grovepiemu.ini"),True)
 
+    def OnCaptureToFile(self,event):
+        if self.scriptRunner!=None and self.scriptRunner.capturing() and self.scriptRunner.running():
+            self.OnStopPY(event)
+        else:
+            saveFileDialog = wx.FileDialog(self, "Save script output to file", "", "",
+                                           "CSV file (*.csv)|*.csv", wx.FD_SAVE)
+            if saveFileDialog.ShowModal() == wx.ID_CANCEL:
+                return
+            self.nextCaptureFile=saveFileDialog.GetPath()
+            self.OnRunPY(event)
+    
+
+            
     def OnClearPY(self,event):
         self.scriptPath=None
         self.OnRunPY(event)
@@ -263,7 +281,8 @@ class Frame(wx.Frame):
             self.scriptNameLabel.SetLabel("GrovePi Python Script: ")
         else:
             self.scriptNameLabel.SetLabel("GrovePi Python Script: %s"%os.path.basename(self.scriptPath))
-            self.scriptRunner=gpe_utils.StoppableRunner(self.scriptPath)
+            self.scriptRunner=gpe_utils.StoppableRunner(self.scriptPath,captureFile=self.nextCaptureFile)
+            self.nextCaptureFile=None
     
     def OnStopPY(self,event):
         if self.scriptRunner!=None and self.scriptRunner.running():
@@ -635,13 +654,20 @@ Currently has support for the following sensors:
             self.csvButtons[">"].SetBackgroundColour((0,255,0))
             self.csvButtons["[]"].SetBackgroundColour((150,128,128))
             self.csvButtons["||"].SetBackgroundColour((150,128,128))
+        self.captureScriptButton.SetBackgroundColour((128,128,128))
+        self.captureScriptButton.SetLabel("Capture script to file")
         if self.scriptRunner!=None:
             if self.scriptRunner.running():
                 self.scriptStatus.SetLabel("Running")
+                if self.scriptRunner.capturing():
+                    self.captureScriptButton.SetBackgroundColour((255,128,128))
+                    self.captureScriptButton.SetLabel("Stop capturing")
+                
             else:
-                self.scriptStatus.SetLabel("Stopped")
+                self.scriptStatus.SetLabel("Stopped")                
         else:
             self.scriptStatus.SetLabel("No script loaded")
+        
         
     def OnClose(self, event):
         if self.scriptRunner!=None and self.scriptRunner.running():
