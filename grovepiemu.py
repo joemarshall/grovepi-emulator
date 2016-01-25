@@ -2,8 +2,10 @@
 #
 # 
 
-import wx
-import wx.propgrid as wxpg
+import Tkinter as tk
+import tkMessageBox as tkm
+import tkFileDialog as tkfd
+import tkSimpleDialog  as tksd
 
 import os    
 import sys
@@ -18,221 +20,186 @@ import json
 import gpe_utils
 import urllib2
 
-class PropertyFrame(wx.Frame):
-    def __init__(self, sensorObject):
-        wx.Frame.__init__(self, None, title=sensorObject.title(), size=(200,200))
-        panel = wx.Panel(self)
-        box = wx.GridSizer(1,1,0,0)
-        sensorObject.initPropertyPage(panel,box)        
-        panel.SetSizer(box)
-        panel.Layout()
+DIGI_PINS=[2,3,4,5,6,7,8]
+ANA_PINS=[0,1,2]
+I2CPINS=[1,2,3]
 
-class AllPropertyFrame(wx.Frame):
+
+class AllPropertyFrame(tk.Toplevel):
     def __init__(self,parent):
-        wx.Frame.__init__(self, parent, title="Properties",style=wx.CAPTION |wx.FRAME_FLOAT_ON_PARENT| wx.FRAME_TOOL_WINDOW)
-        self.panel = wx.Panel(self)
-        self.masterSizer = wx.BoxSizer(wx.VERTICAL)        
-        self.panel.SetSizer(self.masterSizer)
-        self.panel.Layout()
+        tk.Toplevel.__init__(self)
+        self.title("Properties")
         self.componentSizers={}
         
     def addSensorObject(self,sensorObject,type):
         posBefore=0
         pin=sensorObject.pin
-        typeOrdering=["D","A","I"]
-        typeIndex=typeOrdering.index(type)        
-        for c in self.masterSizer.GetChildren():
-            (ignore,otherPin,otherType)=c.GetUserData()
-            otherTypeIndex=typeOrdering.index(otherType)
-            if (otherTypeIndex,otherPin)<(typeIndex,pin):
-                posBefore+=1
-   
-        sizer1=wx.BoxSizer(wx.VERTICAL)
-        sizer1.Add( wx.StaticText(self.panel,label=sensorObject.title()))
-        sizer2=wx.BoxSizer(wx.VERTICAL)
-        sensorObject.initPropertyPage(self.panel,sizer2)
-        self.fixPropertyPageLength(sizer2)
-        sizer1.Add(sizer2,proportion=0,flag=wx.EXPAND)
-        self.masterSizer.Insert(posBefore,sizer1,proportion=0,flag=wx.EXPAND,userData=(sensorObject,sensorObject.pin,type))
-        self.componentSizers[sensorObject]=sizer1
-        self.panel.Layout()
-        self.masterSizer.Fit(self)
-    
-    def fixPropertyPageLength(self,ownerSizer):
-        for c in ownerSizer.GetChildren():
-            if c.GetWindow()!=None and isinstance(c.GetWindow(),wxpg.PropertyGrid):
-                pg=c.GetWindow()
-                rows=pg.GetRoot().GetChildCount()
-                pg.SetMinSize(wx.Size(pg.GetMinWidth(),pg.GetRowHeight()*rows+ pg.GetVerticalSpacing()*(rows+1)))
+        if type=="D":
+            rowNum= DIGI_PINS.index(pin)
+        elif type=="A":
+            rowNum=len(DIGI_PINS)+ANA_PINS.index(pin)
+        elif type=="I":
+            rowNum=len(DIGI_PINS)+len(ANA_PINS)+I2CPINS.index(pin)
+            
+        newFrame=tk.Frame(self)
+        sensorObject.initPropertyPage(newFrame)
+        self.componentSizers[sensorObject]=newFrame
+        newFrame.grid(row=rowNum)
         
     def removeSensorObject(self,sensorObject):
         if self.componentSizers.has_key(sensorObject):
-            self.componentSizers[sensorObject].DeleteWindows()
+            sizer=self.componentSizers[sensorObject]
+            for child in sizer.winfo_children():
+                child.destroy()
+            self.componentSizers[sensorObject].destroy()    
+            del self.componentSizers[sensorObject]
 
 
 
 
-class Frame(wx.Frame):
+class Frame(tk.Frame):
 
-
-    def __init__(self, title):
-        wx.Frame.__init__(self, None, title=title, pos=(150,150), size=(640,480))
-
+    def __init__(self, root,title):
+        tk.Frame.__init__(self, master=root,width=640,height=480)
+        
+        self.root=root
+        
         self.componentList={}
-        self.propertyFrames={}
         self.properties=AllPropertyFrame(self)
-        self.properties.Show()
 
-        self.Bind(wx.EVT_CLOSE, self.OnClose)
+        root.protocol("WM_DELETE_WINDOW", self.OnClose)
         
         
-        menuBar = wx.MenuBar()
-        menu = wx.Menu()
-        m_new=menu.Append(wx.ID_NEW, "&New\tCtrl+N", "Clear everything")
-        m_open=menu.Append(wx.ID_OPEN, "&Open\tCtrl+O", "Open settings file")
-        m_save=menu.Append(wx.ID_SAVE, "&Save\tCtrl+S", "Save settings file")
-        m_saveas=menu.Append(wx.ID_SAVEAS, "Save &As\tCtrl+Shift+S", "Save as new settings file")
-        m_exit = menu.Append(wx.ID_EXIT, "E&xit\tCtrl+X", "Close window and exit program.")
-        self.Bind(wx.EVT_MENU, self.OnClose, m_exit)
-        self.Bind(wx.EVT_MENU, self.OnSave, m_save)
-        self.Bind(wx.EVT_MENU, self.OnSaveAs, m_saveas)
-        self.Bind(wx.EVT_MENU, self.OnOpen, m_open)
-        self.Bind(wx.EVT_MENU, self.OnNew, m_new)
-        menuBar.Append(menu, "&File")
-        
-        menu=wx.Menu()
-        m_about=menu.Append(wx.ID_ABOUT,"&About","Information about the program")
-        self.Bind(wx.EVT_MENU,self.OnAbout,m_about)
-        menuBar.Append(menu,"&Help")
-#        menu = wx.Menu()
-#        m_about = menu.Append(wx.ID_ABOUT, "&About", "Information about this program")
-#        self.Bind(wx.EVT_MENU, self.OnAbout, m_about)
-#        menuBar.Append(menu, "&Help")
-        self.SetMenuBar(menuBar)
-        
-#        self.statusbar = self.CreateStatusBar()
+        menuBar = tk.Menu(root)
+        fileMenu=tk.Menu(menuBar,tearoff=0)
+        m_new=fileMenu.add_command(label="New",command=self.OnNew,underline=0,accelerator="Ctrl+N")
+        m_open=fileMenu.add_command(label="Open", underline=0,accelerator="Ctrl+O",command=self.OnOpen)
+        m_save=fileMenu.add_command(label="Save", underline=0,accelerator="Ctrl+S",command=self.OnSave)
+        m_saveas=fileMenu.add_command(label="Save As",underline=5,accelerator="Ctrl+Shift+S", command=self.OnSaveAs)
+        m_exit = fileMenu.add_command(label="Exit",underline=2,accelerator="Ctrl+X", command=self.OnClose)
 
-        self.panel = wx.Panel(self)
-        self.sizer=wx.GridBagSizer()
+        root.bind_all("<Control-n>", self.OnNew)
+        root.bind_all("<Control-o>", self.OnOpen)
+        root.bind_all("<Control-s>", self.OnSave)
+        root.bind_all("<Control-S>", self.OnSaveAs)
+        root.bind_all("<Control-x>", self.OnClose)
+        
+        menuBar.add_cascade(label="File",menu=fileMenu,underline=0)
+        
+        helpMenu=tk.Menu(menuBar,tearoff=0)
+        helpMenu.add_command(label="About",command=self.OnAbout,underline=0)
+        menuBar.add_cascade(label="Help",menu=helpMenu,underline=0)
+        
+        root.config(menu=menuBar)
+
+
         self.subSizers={}
-        self.digiPins=[2,3,4,5,6,7,8]
-        self.anaPins=[0,1,2]
-        self.i2cPins=[1,2,3]
         self.containerSizers={}
         
-        
-        
-        for row,pinNum in enumerate(self.digiPins):
-            allBox=wx.BoxSizer(wx.VERTICAL)
-            newSizer=wx.BoxSizer(wx.VERTICAL)
-            self.subSizers[(pinNum,"D")]=newSizer
-            self.containerSizers[(pinNum,"D")]=allBox
-            self.sizer.Add(allBox,(row,0),flag=wx.EXPAND)
-            allBox.Add( wx.StaticText(self.panel,label="D%d"%pinNum))
-            allBox.Add(newSizer,flag=wx.EXPAND)
-            newSizer.Add( wx.StaticText(self.panel,label="Right click to connect sensor"))
+        #column 0 = digital
+        for row,pinNum in enumerate(DIGI_PINS):
+            allBox=tk.Frame(root,relief=tk.SUNKEN)
+            label=tk.Label(allBox, text="D%d"%pinNum)
+            label.grid(row=0,sticky=tk.NW)
+            containerBox=tk.Frame(allBox,relief=tk.SUNKEN)
+            containerBox.grid(row=1)
+
+            dummy=tk.Label(containerBox,text="Right click to connect sensor")
+            dummy.pack()
+
+            allBox.grid(row=row,column=0,sticky=tk.W+tk.E+tk.N+tk.S )
             
-        for row,pinNum in enumerate(self.anaPins):
-            allBox=wx.BoxSizer(wx.VERTICAL)
-            newSizer=wx.BoxSizer(wx.VERTICAL)
-            self.subSizers[(pinNum,"A")]=newSizer
+            self.containerSizers[(pinNum,"D")]=allBox
+            self.subSizers[(pinNum,"D")]=containerBox
+            
+        #column 1 = analog
+        for row,pinNum in enumerate(ANA_PINS):
+            allBox=tk.Frame(root,relief=tk.SUNKEN)
+            label=tk.Label(allBox, text="A%d"%pinNum)
+            label.grid(row=0,sticky=tk.NW)
+            containerBox=tk.Frame(allBox,relief=tk.SUNKEN)
+            containerBox.grid(row=1)
+
+            dummy=tk.Label(containerBox,text="Right click to connect sensor")
+            dummy.pack()
+
+            allBox.grid(row=row*2,rowspan=2,column=1,sticky=tk.W+tk.E+tk.N+tk.S )
+            
             self.containerSizers[(pinNum,"A")]=allBox
-            self.sizer.Add(allBox,(row*2,1),span=(2,1),flag=wx.EXPAND)
-            allBox.Add( wx.StaticText(self.panel,label="A%d"%pinNum))
-            allBox.Add(newSizer,flag=wx.EXPAND)
-            newSizer.Add( wx.StaticText(self.panel,label="Right click to connect sensor"))
+            self.subSizers[(pinNum,"A")]=containerBox
 
-        for row,pinNum in enumerate(self.i2cPins):
-            allBox=wx.BoxSizer(wx.VERTICAL)
-            newSizer=wx.BoxSizer(wx.VERTICAL)
-            self.subSizers[(pinNum,"I")]=newSizer
+        #column 2 = i2c
+        for row,pinNum in enumerate(I2CPINS):
+            allBox=tk.Frame(root,relief=tk.SUNKEN)
+            label=tk.Label(allBox, text="I2C-%d"%pinNum)
+            label.grid(row=0,sticky=tk.NW)
+            containerBox=tk.Frame(allBox,relief=tk.SUNKEN)
+            containerBox.grid(row=1)
+
+            dummy=tk.Label(containerBox,text="Right click to connect sensor")
+            dummy.pack()
+
+            allBox.grid(row=row*2,rowspan=2,column=2,sticky=tk.W+tk.E+tk.N+tk.S )
+            
             self.containerSizers[(pinNum,"I")]=allBox
-            allBox.Add( wx.StaticText(self.panel,label="I2C-%d"%pinNum))
-            allBox.Add(newSizer,flag=wx.EXPAND)
-            self.sizer.Add(allBox,(row*2,2),span=(2,1),flag=wx.EXPAND)
-            newSizer.Add( wx.StaticText(self.panel,label="Right click to connect sensor"))
-
+            self.subSizers[(pinNum,"I")]=containerBox
+            
         # CSV file transport, chooser, mapper
-        csvBox=wx.BoxSizer(wx.VERTICAL)
-        transportBox=wx.BoxSizer(wx.HORIZONTAL)
-        transportBox2=wx.BoxSizer(wx.HORIZONTAL)
-        timeBox=wx.FlexGridSizer(2,2)
-        self.csvName=wx.StaticText(self.panel,label="Replay: ")
+        csvBox=tk.Frame(root)
+        transportBox=tk.Frame(csvBox)
+        transportBox2=tk.Frame(csvBox)
+        timeBox=tk.Frame(csvBox)
+        self.csvName=tk.Label(csvBox,text="Replay: ")
         transportButtons=[("Unload..",self.OnUnloadCSV),("File..",self.OnLoadCSV),("Server...",self.OnServerConnect)]
         transportButtons2=[("[]",self.OnStopCSV),("||",self.OnPauseCSV),(">",self.OnPlayCSV),("Map Fields...",self.OnMapCSV)]
         self.csvButtons={}
-        for(label,fn) in transportButtons:
-            button=wx.Button(self.panel,wx.ID_ANY,label,style=wx.BU_EXACTFIT)
-            transportBox.Add(button)
+        for col,(label,fn) in enumerate(transportButtons):
+            button=tk.Button(transportBox,text=label,command=fn)
             self.csvButtons[label]=button
-            button.Bind(wx.EVT_BUTTON,fn)
-        for(label,fn) in transportButtons2:
-            button=wx.Button(self.panel,wx.ID_ANY,label,style=wx.BU_EXACTFIT)
-            transportBox2.Add(button)
+            button.grid(row=0,column=col)
+        for col,(label,fn) in enumerate(transportButtons2):
+            button=tk.Button(transportBox2,text=label,command=fn)
             self.csvButtons[label]=button
-            button.Bind(wx.EVT_BUTTON,fn)
+            button.grid(row=0,column=col)
         
-        self.csvTimeReal=wx.StaticText(self.panel,label="00:00:00 (12/12/2012)",style=wx.ST_NO_AUTORESIZE)
-        self.csvTimeStart=wx.StaticText(self.panel,label="00:00:00",style=wx.ST_NO_AUTORESIZE)
-        oldFont=self.csvTimeReal.GetFont()
-        newFont=wx.Font(oldFont.PointSize,wx.FONTFAMILY_TELETYPE,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_NORMAL)
-        self.csvTimeReal.SetFont(newFont)
-        self.csvTimeStart.SetFont(newFont)
+        self.csvTimeReal=tk.Label(timeBox,text="00:00:00 (12/12/2012)",font="Courier")
+        self.csvTimeStart=tk.Label(timeBox,text="00:00:00",font="Courier")
+        tk.Label(timeBox,text="Time from start:").grid(row=0,column=0,sticky=tk.E)
+        tk.Label(timeBox,text="File Time:").grid(row=1,column=0,sticky=tk.E)
+        self.csvTimeStart.grid(row=0,column=1,sticky=tk.W)
+        self.csvTimeReal.grid(row=1,column=1,sticky=tk.W)
+        
+        self.csvName.grid(row=0,sticky=tk.W)
+        transportBox.grid(row=1,sticky=tk.W)
+        transportBox2.grid(row=2,sticky=tk.W)
+        timeBox.grid(row=3,sticky=tk.W)
+        
+        csvBox.grid(row=7,column=2)            
+        
+        scriptBox=tk.Frame(root)
+        self.scriptNameLabel=tk.Label(scriptBox,text="GrovePi Python Script:")
+        self.scriptStatus=tk.Label(scriptBox,text="")
+        
+        self.captureScriptButton=tk.Button(scriptBox,text="Capture script to file",command=self.OnCaptureToFile)
 
-        timeBox.Add(wx.StaticText(self.panel,label="Time from start: "),flag=wx.ALIGN_RIGHT)
-        timeBox.Add(self.csvTimeStart)
-        timeBox.Add(wx.StaticText(self.panel,label="File Time: "),flag=wx.ALIGN_RIGHT)
-        timeBox.Add(self.csvTimeReal)
-            
-        csvBox.Add(self.csvName)
-        csvBox.Add(transportBox)
-        csvBox.Add(transportBox2)
-        csvBox.Add(timeBox)
-        self.sizer.Add(csvBox,(7,2),flag=wx.EXPAND)
-        
-        # script loader, stopper, starter
-        scriptBox=wx.BoxSizer(wx.VERTICAL)
-        self.scriptNameLabel=wx.StaticText(self.panel,label="GrovePi Python Script:")
-        self.scriptStatus=wx.StaticText(self.panel,label="")
-        
-        pyButtonBox=wx.BoxSizer(wx.HORIZONTAL)
+        pyButtonBox=tk.Frame(scriptBox)
         pyButtons=[("Load...",self.OnLoadPY),("Clear",self.OnClearPY),("[]",self.OnStopPY),(">",self.OnRunPY)]
         self.scriptButtons={}
-        for(label,fn) in pyButtons:
-            button=wx.Button(self.panel,wx.ID_ANY,label,style=wx.BU_EXACTFIT)
-            pyButtonBox.Add(button)
+        for col,(label,fn) in enumerate(pyButtons):
+            button=tk.Button(pyButtonBox,text=label,command=fn)
+            button.grid(row=0,column=col)
             self.scriptButtons[label]=button
-            button.Bind(wx.EVT_BUTTON,fn)
-        
-        scriptBox.Add(self.scriptNameLabel)
-        scriptBox.Add(self.scriptStatus)
-        scriptBox.Add(pyButtonBox)
-        
-        self.captureScriptButton=wx.Button(self.panel,wx.ID_ANY,"Capture script to file")
-        self.captureScriptButton.Bind(wx.EVT_BUTTON,self.OnCaptureToFile)
-        scriptBox.Add(self.captureScriptButton)
-        
-        self.sizer.Add(scriptBox,(7,1),flag=wx.EXPAND)            
-            
-        for i in range(3):
-            self.sizer.AddGrowableCol(i)
-            
-        for i in range(7):
-            self.sizer.AddGrowableRow(i)
-            
- 
- 
-        self.panel.SetSizer(self.sizer)
-        self.panel.Layout()
 
-        self.panel.Bind(wx.EVT_RIGHT_DOWN, self.OnContextMenu)
+        self.scriptNameLabel.grid()
+        self.scriptStatus.grid()
+        pyButtonBox.grid()
+        self.captureScriptButton.grid()
+        scriptBox.grid(row=7,column=1)
         
-
+        root.bind("<Button-3>", self.OnContextMenu)
         
-        self.updateTimer = wx.Timer(self)
-        self.Bind(wx.EVT_TIMER, self.update, self.updateTimer)
-        self.updateTimer.Start(50)
-        self.BindRightClick(self)
+        
+        
         self.player=None
         self.scriptPath=None
         self.scriptRunner=None
@@ -244,120 +211,134 @@ class Frame(wx.Frame):
             self.settingsFile=sys.argv[1]
             self.loadSettingsIni(sys.argv[1])
             if self.settingsFile!=None:
-               self.SetTitle("GrovePi Emulator - %s"%self.settingsFile)
+               self.root.wm_title("GrovePi Emulator - %s"%self.settingsFile)
         else:
             self.loadSettingsIni(os.path.join(os.path.dirname(__file__),"grovepiemu.ini"),True)
-
-    def OnCaptureToFile(self,event):
-        if self.scriptRunner!=None and self.scriptRunner.capturing() and self.scriptRunner.running():
-            self.OnStopPY(event)
-        else:
-            saveFileDialog = wx.FileDialog(self, "Save script output to file", "", "",
-                                           "CSV file (*.csv)|*.csv", wx.FD_SAVE)
-            if saveFileDialog.ShowModal() == wx.ID_CANCEL:
-                return
-            self.nextCaptureFile=saveFileDialog.GetPath()
-            self.OnRunPY(event)
-    
-
-            
-    def OnClearPY(self,event):
-        self.scriptPath=None
-        self.OnRunPY(event)
-            
-    def OnLoadPY(self,event,reloadCurrent=False):
-        if not reloadCurrent:
-            openFileDialog = wx.FileDialog(self, "Open Python script to run", "", "",
-                                           "Python files (*.py)|*.py", wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
-            if openFileDialog.ShowModal() == wx.ID_CANCEL:
-                return
-            self.scriptPath=openFileDialog.GetPath()
-        self.OnRunPY(event)
+        self.root.after(50,self.update)
         
-    def OnRunPY(self,event):
+
+            
+            
+    def OnCaptureToFile(self):
+        if self.scriptRunner!=None and self.scriptRunner.capturing() and self.scriptRunner.running():
+            self.OnStopPY()
+        else:
+            options={}
+            options['defaultextension'] = '.csv'
+            options['filetypes'] = [('CSV file', '.csv')]
+            options['parent'] = self.root
+            options['title'] = 'Save script output to file'    
+            filename=tkfd.asksaveasfilename(**options)
+            if not filename:
+                return
+            self.nextCaptureFile=filename
+            self.OnRunPY()
+            
+    def OnClearPY(self):
+        self.scriptPath=None
+        self.OnRunPY()
+            
+    def OnLoadPY(self,reloadCurrent=False):
+        if not reloadCurrent:
+            options={}
+            options['defaultextension'] = '.py'
+            options['filetypes'] = [('Python file', '.py')]
+            options['parent'] = self.root
+            options['title'] = 'Open python script to run'    
+            filename=tkfd.askopenfilename(**options)
+            if not filename:
+                return
+            self.scriptPath=filename
+        self.OnRunPY()
+        
+    def OnRunPY(self):
         if self.scriptRunner!=None and self.scriptRunner.running():
             self.scriptRunner.stop()
         if self.scriptPath==None:
-            self.scriptNameLabel.SetLabel("GrovePi Python Script: ")
+            self.scriptNameLabel.config(text="GrovePi Python Script: ")
         else:
-            self.scriptNameLabel.SetLabel("GrovePi Python Script: %s"%os.path.basename(self.scriptPath))
+            self.scriptNameLabel.config(text="GrovePi Python Script: %s"%os.path.basename(self.scriptPath))
             self.scriptRunner=gpe_utils.StoppableRunner(self.scriptPath,captureFile=self.nextCaptureFile)
             self.nextCaptureFile=None
     
-    def OnStopPY(self,event):
+    def OnStopPY(self):
         if self.scriptRunner!=None and self.scriptRunner.running():
             self.scriptRunner.stop()
         
-    def OnServerConnect(self,event,reloadCurrent=False):
+    def OnServerConnect(self,reloadCurrent=False):
         if not reloadCurrent:
             oldPath="http://www.cs.nott.ac.uk/~pszjm2/sensordata/?id=1"
             if self.csvPath!=None and self.csvPath.lower().startswith("http://"):
                 oldPath=self.csvPath
-            selectURLDialog= wx.TextEntryDialog(self,"Enter a URL to remote sensor data","Connect to sensor server",defaultValue=oldPath)
-            if selectURLDialog.ShowModal()==wx.ID_CANCEL:
+            csvPath= tksd.askstring(parent=self.root,prompt="Enter a URL to remote sensor data",title="Connect to sensor server",initialvalue=oldPath)
+            if csvPath==None:
                 return
-            self.csvPath=selectURLDialog.GetValue()
+            self.csvPath=csvPath
             if not self.csvPath.lower().startswith("http://"):
                 self.csvPath="http://"+self.csvPath
         if self.player!=None:
             self.player.unload()
             self.player=None
-            self.csvName.SetLabel("Replay data: ")
+            self.csvName.config(text="Replay data: ")
         if self.csvPath!=None:
             try:
                 self.player=gpe_utils.ServerPlayer(self.csvPath)
-                self.csvName.SetLabel("Replay url: %s (need to set mapping)"%(self.player.getName()))
-                self.OnMapCSV(None,reloadCurrent)
+                self.csvName.config(text="Replay url: %s (need to set mapping)"%(self.player.getName()))
+                self.OnMapCSV(reloadCurrent=reloadCurrent)
             except IOError:
                 self.player=None
-                self.csvName.SetLabel("Replay data: ")
+                self.csvName.config(text="Replay data: ")
                 self.csvPath=None
 
-    def OnJSONConnect(self,event,reloadCurrent=False):
+    def OnJSONConnect(self,reloadCurrent=False):
         if not reloadCurrent:
             oldPath="http://www.cs.nott.ac.uk/~jqm/sensorvalues.php?id=2"
             if self.csvPath.lower().startswith("http://"):
                 oldPath=self.csvPath
-            selectURLDialog= wx.TextEntryDialog(self,"Enter a URL to remote sensor data JSON","Connect to JSON Sensor Server",defaultValue=oldPath)
-            if selectURLDialog.ShowModal()==wx.ID_CANCEL:
+            csvPath= tksd.askstring(parent=self.root,prompt="Enter a URL to remote sensor data",title="Connect to JSON Sensor Server",initialvalue=oldPath)
+            if csvPath==None:
                 return
-            self.csvPath=selectURLDialog.GetValue()
+            self.csvPath=csvPath
             if not self.csvPath.lower().startswith("http://"):
                 self.csvPath="http://"+self.csvPath
         if self.player!=None:
             self.player.unload()
             self.player=None
-            self.csvName.SetLabel("Replay data: ")
+            self.csvName.config(text="Replay data: ")
         if self.csvPath!=None:
             self.player=gpe_utils.JSONPlayer(self.csvPath)
-            self.csvName.SetLabel("Replay url: %s (need to set mapping)"%(self.player.getName()))
-            self.OnMapCSV(None,reloadCurrent)
+            self.csvName.config(text="Replay url: %s (need to set mapping)"%(self.player.getName()))
+            self.OnMapCSV(reloadCurrent=reloadCurrent)
             
             
-    def OnUnloadCSV(self,event):
+    def OnUnloadCSV(self):
         if self.player!=None:
             self.player.unload()       
             self.player=None
-            self.csvName.SetLabel("Replay data: ")
+            self.csvName.config(text="Replay data: ")
             self.csvPath=""
         
         
-    def OnLoadCSV(self,event,reloadCurrent=False):
+    def OnLoadCSV(self,reloadCurrent=False):
         if not reloadCurrent:
-            openFileDialog = wx.FileDialog(self, "Open CSV file for data playback", "", "",
-                                           "CSV files (*.csv)|*.csv", wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
-
-            if openFileDialog.ShowModal() == wx.ID_CANCEL:
+            options={}
+            options['defaultextension'] = '.csv'
+            options['filetypes'] = [('CSV file', '.csv')]
+            options['parent'] = self.root
+            options['title'] = 'Open CSV file for data playback'    
+        
+            filename=tkfd.askopenfilename(**options)
+            if not filename:
                 return
-            self.csvPath=openFileDialog.GetPath()
+            self.csvPath=filename
         if self.player!=None:
             self.player.unload()       
             self.player=None
-            self.csvName.SetLabel("Replay data: ")
+            self.csvName.config(text="Replay data: ")
         if self.csvPath!=None:
             self.player=gpe_utils.CSVPlayer(self.csvPath)
-            self.csvName.SetLabel("Replay data: %s (need to set mapping)"%(self.player.getName()))
-            self.OnMapCSV(None,reloadCurrent)
+            self.csvName.config(text="Replay data: %s (need to set mapping)"%(self.player.getName()))
+            self.OnMapCSV(reloadCurrent=reloadCurrent)
 
     def findComponentByName(self,name):
         for c in self.componentList.values():
@@ -365,56 +346,59 @@ class Frame(wx.Frame):
                 return c
         return None
         
-    def OnMapCSV(self,event,reloadCurrent=False):
+    def OnMapCSV(self,reloadCurrent=False):
         if self.player==None:
             return
         if not reloadCurrent:        
-            mapdlg=gpe_utils.CSVMappingDlg(self,self.player.getFieldNames(),self.componentList.values(),self.lastAssignments,isinstance(self.player,gpe_utils.CSVPlayer))
-            if mapdlg.ShowModal()!=wx.ID_OK:
+            mapdlg=gpe_utils.CSVMappingDlg(self.root,self.player.getFieldNames(),self.componentList.values(),self.lastAssignments,isinstance(self.player,gpe_utils.CSVPlayer))
+            assignments=mapdlg.getAssignments()
+            if assignments==None:
                 return
-            self.lastAssignments=mapdlg.getAssignments()
+            self.lastAssignments=assignments
         assignmentsFixed={}
         timeColumn=None
-        for (col,dest) in self.lastAssignments.items():
-            if type(dest)==tuple or type(dest)==list:
-                colDesc=(self.findComponentByName(dest[0]),dest[1])
-                if colDesc[0]!=None:
-                    assignmentsFixed[col]=colDesc
-            elif dest=="TIME":
-                timeColumn=col
-            else:
-                colDesc=self.findComponentByName(dest)
-                if colDesc!=None:
-                    assignmentsFixed[col]=colDesc
+        for (col,dests) in self.lastAssignments.items():
+            assignmentsFixed[col]=[]
+            for dest in dests:
+                if type(dest)==tuple or type(dest)==list:
+                    colDesc=(self.findComponentByName(dest[0]),dest[1])
+                    if colDesc[0]!=None:
+                        assignmentsFixed[col].append(colDesc)
+                elif dest=="TIME":
+                    timeColumn=col
+                else:
+                    colDesc=self.findComponentByName(dest)
+                    if colDesc!=None:
+                        assignmentsFixed[col].append(colDesc)
         if isinstance(self.player,gpe_utils.ServerPlayer):
             if len(assignmentsFixed)>0:
                 self.player.setFieldAssignments(assignmentsFixed)
-                self.csvName.SetLabel("Replay data: %s"%(self.player.getName()))
-                self.player.startPlaying(self,True)
+                self.csvName.config(text="Replay data: %s"%(self.player.getName()))
+                self.player.startPlaying(self.root,True)
         else:
             if timeColumn!=None and len(assignmentsFixed)>0:
                 self.player.setFieldAssignments(timeColumn,assignmentsFixed)
-                self.csvName.SetLabel("Replay data: %s"%(self.player.getName()))
+                self.csvName.config(text="Replay data: %s"%(self.player.getName()))
         
-    def OnStopCSV(self,event):
+    def OnStopCSV(self):
         if self.player!=None:
             self.player.stopPlaying()
         
-    def OnPauseCSV(self,event):
+    def OnPauseCSV(self):
         if self.player!=None:
             self.player.pausePlaying()
         
-    def OnPlayCSV(self,event):
+    def OnPlayCSV(self):
         if self.player!=None:
-            self.player.startPlaying(self,True)                       
+            self.player.startPlaying(self.root,True)                       
             
-    def OnSave(self,event):
+    def OnSave(self,event=None):
         if self.settingsFile==None:
-            self.OnSaveAs(event)
+            self.OnSaveAs()
         else:
             self.saveSettingsIni(self.settingsFile)
 
-    def OnNew(self,event):
+    def OnNew(self,event=None):
         removals=[]
         for (pin,type) in self.componentList.keys():
             removals.append((pin,type))
@@ -423,49 +407,48 @@ class Frame(wx.Frame):
         if self.player!=None:
             self.player.unload()       
             self.player=None
-            self.csvName.SetLabel("Replay data: ")
+            self.csvName.config(text="Replay data: ")
         if self.scriptRunner!=None and self.scriptRunner.running():
             self.scriptRunner.stop()
         self.scriptPath=None
-        self.scriptNameLabel.SetLabel("GrovePi Python Script: ")
+        self.scriptNameLabel.config(text="GrovePi Python Script: ")
             
-    def OnSaveAs(self,event):
-        openFileDialog = wx.FileDialog(self, "Save GrovePI emulator settings", "", "",
-                                       "Grove PI emulator settings files (*.gpi)|*.gpi", wx.FD_SAVE)
-        if openFileDialog.ShowModal() == wx.ID_CANCEL:
+    def OnSaveAs(self,event=None):
+        options={}
+        options['defaultextension'] = '.gpi'
+        options['filetypes'] = [('GrovePI emulator settings file', '.gpi')]
+        options['parent'] = self.root
+        options['title'] = 'Save GrovePI emulator settings'    
+        filename= tkfd.asksaveasfilename(**options)
+        if not filename:
             return
-        self.settingsFile=openFileDialog.GetPath()
-        self.SetTitle("GrovePi Emulator - %s"%self.settingsFile)
+        self.settingsFile=filename
+        self.root.wm_title("GrovePi Emulator - %s"%self.settingsFile)
         self.saveSettingsIni(self.settingsFile)
     
     
-    def OnOpen(self,event):
-        openFileDialog = wx.FileDialog(self, "Open GrovePI emulator settings", "", "",
-                                       "Grove PI emulator settings files (*.gpi)|*.gpi", wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
-
-        if openFileDialog.ShowModal() == wx.ID_CANCEL:
+    def OnOpen(self,event=None):
+        options={}
+        options['defaultextension'] = '.gpi'
+        options['filetypes'] = [('GrovePI emulator settings file', '.gpi')]
+        options['parent'] = self.root
+        options['title'] = 'Save GrovePI emulator settings'    
+        filename= tkfd.askopenfilename(**options)
+        if not filename:
             return
-        self.settingsFile=openFileDialog.GetPath()
-        self.SetTitle("GrovePi Emulator - %s"%self.settingsFile)
+        self.settingsFile=filename
+        self.root.wm_title("GrovePi Emulator - %s"%self.settingsFile)
         self.loadSettingsIni(self.settingsFile)
         
-    def OnAbout(self,event):
-        info = wx.AboutDialogInfo()
+    def OnAbout(self):
         description="""Emulation environment for running python programs developed for the GrovePI sensor board.
 Currently has support for the following sensors:
 
 """
         for c in components.allSensors:
             description+=c.classDescription()+"\n"
-        info.SetName('Grove PI Emulation Environment')
-        info.SetVersion('1.0')
-        info.SetDescription(description)
-        info.SetCopyright('(C) 2015 Joe Marshall')
-        info.SetWebSite('http://www.cs.nott.ac.uk/~jqm')
-        info.SetLicence(""" Do what you want with the code. Any questions, email joe.marshall@nottingham.ac.uk """)
-        info.AddDeveloper('Joe Marshall')
-
-        wx.AboutBox(info)
+        description+="\nBy Joe Marshall\nhttp://www.cs.nott.ac.uk/~jqm\n\nDo what you want with the code. Any questions, email joe.marshall@nottingham.ac.uk "
+        tkm.showinfo("Grove PI Emulation Environment 1.1",message=description)
 
     
     def loadSettingsIni(self,name,fromIni=False):
@@ -495,12 +478,12 @@ Currently has support for the following sensors:
                     self.csvPath=self.fullPath(allConfig["csvPath"],name)
                     # reload the CSV file and sensor assignments
                     if self.csvPath.lower().startswith("http://"):
-                        self.OnServerConnect(None,True)
+                        self.OnServerConnect(reloadCurrent=True)
                     else:
-                        self.OnLoadCSV(None,True)
+                        self.OnLoadCSV(True)
                 else:
-                    self.OnUnloadCSV(None)
-                self.OnLoadPY(None,True)
+                    self.OnUnloadCSV()
+                self.OnLoadPY(reloadCurrent=True)
  #               if fromIni:
  #                   self.settingsFile=self.fullPath(allConfig["currentFileOpen"],name) 
  #                   if self.settingsFile!=None:
@@ -552,82 +535,63 @@ Currently has support for the following sensors:
 # e)currently loaded csv file
         None
         
-    def BindRightClick(self,wnd):
-        wnd.Bind(wx.EVT_RIGHT_DOWN,self.OnContextMenu)
-        for item in wnd.GetChildren():
-            self.BindRightClick(item)
-
-        
     def OnContextMenu(self,event):
-        fromWindow=event.GetEventObject()
-        posHere=self.ScreenToClient(fromWindow.ClientToScreen(event.GetPosition()))
+        x,y=event.x_root,event.y_root
         for (pin,type),sizer in self.containerSizers.items():
-            sp=sizer.GetPosition()
-            ss=sizer.GetSize()
-            rect = wx.Rect(sp.x,sp.y,ss.width,ss.height)
-            if rect.Contains(posHere):
-                if type=="D":
-                    menu = wx.Menu()
+            wx=sizer.winfo_rootx()
+            wy=sizer.winfo_rooty()
+            ww=sizer.winfo_width()
+            wh=sizer.winfo_height()
+            menu = tk.Menu(self.root, tearoff=0)
+            
+            if x>=wx and x<wx+ww and y>=wy and y<wy+wh:                
+                if type=="D":                
                     for index,classObj in enumerate(components.digitalSensors):
-                        menu.Append(index+1,classObj.classDescription())
-                        wx.EVT_MENU(menu,index+1,self.OnSelectDig)
-                    menu.AppendSeparator()
+                        menu.add_command(label=classObj.classDescription(),command=lambda i=index,p=pin: self.OnSelectDig(i+1,p))
+                    menu.add_separator()
                     for index,classObj in enumerate(components.digitalOutputs):
-                        menu.Append(index+1000,classObj.classDescription())
-                        wx.EVT_MENU(menu,index+1000,self.OnSelectDig)
+                        menu.add_command(label=classObj.classDescription(),command=lambda i=index,p=pin: self.OnSelectDig(i+1000,p))
                 elif type=="A":
-                    menu = wx.Menu()
                     for index,classObj in enumerate(components.analogSensors):
-                        menu.Append(index+1,classObj.classDescription())
-                        wx.EVT_MENU(menu,index+1,self.OnSelectAna)
+                        menu.add_command(label=classObj.classDescription(),command=lambda i=index,p=pin: self.OnSelectAna(i+1,p))
                 elif type=="I":
-                    menu = wx.Menu()
                     for index,classObj in enumerate(components.i2cConnections):
-                        menu.Append(index+1,classObj.classDescription())
-                        wx.EVT_MENU(menu,index+1,self.OnSelectI2c)
-                self.menuSelection=None
+                        menu.add_command(label=classObj.classDescription(),command=lambda i=index,p=pin: self.OnSelectI2c(i+1,p))
+
                 if self.componentList.has_key((pin,type)):
-                    menu.AppendSeparator()
-                    menu.Append(999,"Disconnect "+self.componentList[(pin,type)].title())
-                    wx.EVT_MENU(menu,999,self.OnDeleteComponent)
+                    menu.add_separator()
                     self.selectedComponent=(pin,type)
+                    menu.add_command(label="Disconnect "+self.componentList[(pin,type)].title(),command=self.OnDeleteComponent)
                     
-                if self.PopupMenu( menu, posHere ) and self.menuSelection!=None:
-                    wx.CallAfter(self.addComponent, self.menuSelection(pin),type)
+                self.menuSelection=None
+                menu.tk_popup(x,y,0)
 
-    def OnSelectDig(self,event):
-        if event.GetId()<1000:
-            self.menuSelection= components.digitalSensors[event.GetId()-1]
+    def OnSelectDig(self,index,pin):
+        if index<1000:
+            self.addComponent(components.digitalSensors[index-1](pin),"D")
         else:
-            self.menuSelection= components.digitalOutputs[event.GetId()-1000]
+            self.addComponent(components.digitalOutputs[index-1000](pin),"D")
         
-    def OnSelectAna(self,event):
-        self.menuSelection= components.analogSensors[event.GetId()-1]
+    def OnSelectAna(self,index,pin):
+        self.addComponent(components.analogSensors[index-1](pin),"A")
 
-    def OnSelectI2c(self,event):
-        self.menuSelection= components.i2cConnections[event.GetId()-1]
+    def OnSelectI2c(self,index,pin):
+        self.addComponent(components.i2cConnections[index-1](pin),"I")
         
-    def OnDeleteComponent(self,event):
+    def OnDeleteComponent(self):
         self.removeComponent(*self.selectedComponent)
 
         
     def addComponent(self,component,type):
         pin=component.pin
-        self.removeComponent(pin,type)
+        self.removeComponent(pin,type,replacing=True)
         self.componentList[(pin,type)]=component
         if hasattr(component,"initPropertyPage"):
             self.properties.addSensorObject(component,type)
-            #pf=PropertyFrame(component)
-            #pf.Show()
-            #self.propertyFrames[(pin,type)]=pf
         sizer=self.subSizers[(pin,type)]
-        component.initSmall(self.panel,sizer)
-        for item in sizer.GetChildren():
-            if item.GetWindow()!=None:
-                item.GetWindow().Bind(wx.EVT_RIGHT_DOWN,self.OnContextMenu)
-        self.panel.Layout()
+        component.initSmall(sizer)
                 
-    def removeComponent(self,pin,type):
+    def removeComponent(self,pin,type,replacing=False):
         if self.componentList.has_key((pin,type)):
             component=self.componentList[(pin,type)]
             if hasattr(component,"onComponentDestroy"):
@@ -635,55 +599,58 @@ Currently has support for the following sensors:
             del(self.componentList[(pin,type)])
             self.properties.removeSensorObject(component)
         sizer=self.subSizers[(pin,type)]
-        sizer.DeleteWindows()
+        for child in sizer.winfo_children():
+            child.destroy()
+        if not replacing:
+            dummy=tk.Label(sizer,text="Right click to connect sensor")
+            dummy.pack()
+        
         
             
-    def update(self,event):
+    def update(self):
         for component in self.componentList.values():
             if hasattr(component,"update"):
                 component.update()
         if self.player!=None:
             ofsTime,realTime=self.player.getTimes()
-            self.csvTimeStart.SetLabel(time.strftime("%H:%M:%S",time.gmtime(ofsTime)))
-            self.csvTimeReal.SetLabel(time.strftime("%H:%M:%S (%d/%m/%Y)",time.gmtime(realTime)))
+            self.csvTimeStart.config(text=time.strftime("%H:%M:%S",time.gmtime(ofsTime)))
+            self.csvTimeReal.config(text=time.strftime("%H:%M:%S (%d/%m/%Y)",time.gmtime(realTime)))
         if self.player==None or not self.player.playing():
-            self.csvButtons[">"].SetBackgroundColour((128,150,128))
-            self.csvButtons["[]"].SetBackgroundColour((255,0,0))
-            self.csvButtons["||"].SetBackgroundColour((255,0,0))
+            self.csvButtons[">"].config(bg="pale green")
+            self.csvButtons["[]"].config(bg="red")
+            self.csvButtons["||"].config(bg="red")
         else:
-            self.csvButtons[">"].SetBackgroundColour((0,255,0))
-            self.csvButtons["[]"].SetBackgroundColour((150,128,128))
-            self.csvButtons["||"].SetBackgroundColour((150,128,128))
-        self.captureScriptButton.SetBackgroundColour((128,128,128))
-        self.captureScriptButton.SetLabel("Capture script to file")
+            self.csvButtons[">"].config(bg="green")
+            self.csvButtons["[]"].config(bg="#ff7f7f")
+            self.csvButtons["||"].config(bg="#ff7f7f")
+        self.captureScriptButton.config(bg="gray80")
+        self.captureScriptButton.config(text="Capture script to file")
         if self.scriptRunner!=None:
             if self.scriptRunner.running():
-                self.scriptStatus.SetLabel("Running")
+                self.scriptStatus.config(text="Running")
                 if self.scriptRunner.capturing():
-                    self.captureScriptButton.SetBackgroundColour((255,128,128))
-                    self.captureScriptButton.SetLabel("Stop capturing")
+                    self.captureScriptButton.config(bg="#ff7f7f")
+                    self.captureScriptButton.config(text="Stop capturing")
                 
             else:
-                self.scriptStatus.SetLabel("Stopped")                
+                self.scriptStatus.config(text="Stopped")                
         else:
-            self.scriptStatus.SetLabel("No script loaded")
+            self.scriptStatus.config(text="No script loaded")
+        self.root.after(50,self.update)
         
         
-    def OnClose(self, event):
+    def OnClose(self,event=None):
         if self.scriptRunner!=None and self.scriptRunner.running():
             self.scriptRunner.stop()
         self.saveSettingsIni(os.path.join(os.path.dirname(__file__),"grovepiemu.ini"))
-        self.Destroy()
-#        dlg = wx.MessageDialog(self, 
-#            "Do you really want to close this application?",
-#            "Confirm Exit", wx.OK|wx.CANCEL|wx.ICON_QUESTION)
- #       result = dlg.ShowModal()
-  #      dlg.Destroy()
-   #     if result == wx.ID_OK:
-    #        self.Destroy()
+        self.root.quit()
 
     
-app = wx.App()   # Error messages go to popup window
-top = Frame("GrovePi Emulator - <untitled>")
-top.Show()
-app.MainLoop()
+root =tk.Tk()                             #main window
+
+top = Frame(root,"GrovePi Emulator - <untitled>")
+#top.Show()
+
+
+root.mainloop()
+    

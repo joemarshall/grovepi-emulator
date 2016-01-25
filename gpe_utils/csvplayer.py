@@ -1,8 +1,9 @@
 import csv
 import grovepi
 import time
-import wx
 import os
+
+import Tkinter as tk
 
 class CSVPlayer:
     def __init__(self,name):
@@ -23,7 +24,7 @@ class CSVPlayer:
         self.timeColumn=None
         self.curPos=0
         self.startTime=0
-        self.timer=None
+        self.timerFrame=None
             
     def getName(self):
         return os.path.basename(self.filename)
@@ -54,23 +55,27 @@ class CSVPlayer:
         self.loop=loop
         # this takes account that we may have paused before
         self.playStartRealTime=time.time() - (self.allLines[self.curPos][self.timeColumn]-self.startTime)
-        self.timer=wx.Timer(frame)
-        frame.Bind(wx.EVT_TIMER, self.onTimerFired, self.timer)
-        self.timer.Start(0,True)
+        self.timerFrame=frame
+        self.timerID=self.timerFrame.after(0,self.onTimerFired)
+        
         
     def stopPlaying(self):
-        if self.timer!=None:
-            self.timer.Stop()
-            self.timer=None
+        if self.timerFrame!=None:
+            if self.timerID!=None:
+                self.timerFrame.after_cancel(self.timerID)
+            self.timerFrame=None
+            self.timerID=None
         self.curPos=0
             
     def pausePlaying(self):
-        if self.timer!=None:
-            self.timer.Stop()
-            self.timer=None
+        if self.timerFrame!=None:
+            if self.timerID!=None:
+                self.timerFrame.after_cancel(self.timerID)
+            self.timerFrame=None
+            self.timerID=None
         
     def playing(self):
-        return (self.timer!=None)
+        return (self.timerFrame!=None)
 
     def unload(self):
         self.stopPlaying()
@@ -83,24 +88,28 @@ class CSVPlayer:
             return 0,0
         
     
-    def onTimerFired(self,event):
+    def onTimerFired(self):
         timeSinceStart=time.time()-self.playStartRealTime
-        for (key,target) in self.assignments.iteritems():
-            if type(target)!=tuple:
-                target.setValue(self.allLines[self.curPos][key])
-            else:
-                t,channel=target
-                t.setValue(channel,self.allLines[self.curPos][key])
+        print "curpos",self.curPos
+        for (key,targets) in self.assignments.iteritems():
+            for target in targets:
+                if type(target)!=tuple:
+                    target.setValue(self.allLines[self.curPos][key])
+                else:
+                    t,channel=target
+                    t.setValue(channel,self.allLines[self.curPos][key])
         if self.curPos+1 < len(self.allLines):
             nextTime=self.allLines[self.curPos+1][self.timeColumn]-self.startTime
-            if nextTime>0:
-                self.timer.Start(1000*(nextTime-timeSinceStart),True)
-            else:
-                self.timer.Start(0,True)
+            if self.timerFrame!=None:
+                if nextTime>0:
+                    self.timerID=self.timerFrame.after(int(1000*(nextTime-timeSinceStart)),self.onTimerFired)
+                else:
+                    self.timerID=self.timerFrame.after(10,self.onTimerFired)
             self.curPos+=1
         else:
             if self.loop:
                 self.curPos=0
                 self.playStartRealTime=time.time()
-                self.timer.Start(0,True)
+                if self.timerFrame!=None:
+                    self.timerID=self.timerFrame.after(10,self.onTimerFired)
 

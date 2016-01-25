@@ -1,62 +1,16 @@
 import grovenfctag
-import wx
-import wx.grid
-import wx.propgrid as wxpg
 
-class HexValidator(wx.PyValidator): 
-   def __init__(self): 
-      wx.PyValidator.__init__(self) 
-      wx.EVT_CHAR(self, self.OnChar) 
+import Tkinter as tk
+import propgrid
 
-   def Clone(self): 
-      return HexValidator() 
-
-   def Validate(self, win): 
-      tc = wxPyTypeCast(win, "wxTextCtrl") 
-      val = tc.GetValue() 
-      for x in val: 
-         if x not in "0123456789abcdefABCDEF": 
-            return false 
-      return true 
-
-   def OnChar(self, event): 
-      key = event.KeyCode
-      if key < wx.WXK_SPACE or key == wx.WXK_DELETE or key > 255: 
-         event.Skip() 
-         return 
-      if chr(key) in "0123456789abcdefABCDEF": 
-         event.Skip() 
-         return 
-#      if not wxValidator_IsSilent(): 
-#         wxBell() 
-      return 
-
-class HexTextCtrl(wx.TextCtrl): 
-    def __init__(self,parent,id,text): 
-        wx.TextCtrl.__init__(self,parent, id, text,validator = HexValidator(), 
-                             style=wx.TE_PROCESS_ENTER) 
-        self.SetInsertionPoint(0) 
-        self.SetMaxLength(2) 
-        #self.Bind(wx.EVT_TEXT, self.OnText) 
-        #self.Bind(wx.EVT_KEY_DOWN, self.OnKeyDown) 
-#        self.parentgrid=parentgrid 
-        self.userpressed=False 
-
-    def OnKeyDown(self, evt): 
-        self.userpressed=True 
-        evt.Skip() 
-
-    def OnText(self, evt): 
-        if len(evt.GetString())>=2 and self.userpressed: 
-            self.userpressed=False 
-#            wx.CallAfter(self.parentgrid.advanceCursor) 
 
 class GroveNFCTagModule:
 
 
-    
     def __init__(self,pin):
         self.pin=pin
+        self.currentDataPoint=None
+        self.doValidate=True
     
     def title(self):
         return "I2C-%d: Grove NFC Tag:"%self.pin
@@ -65,45 +19,96 @@ class GroveNFCTagModule:
     def classDescription(cls):
         return "Grove NFC Tag"
     
-    def initSmall(self,parent,sizer):
-        self.titleLabel=wx.StaticText(parent,wx.ID_ANY,self.title(),style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE)
-        self.blockSizer=wx.BoxSizer(wx.HORIZONTAL)
-        self.blockLabel=wx.StaticText(parent,wx.ID_ANY,"Block address: 0x")
-        self.blockEdit=wx.TextCtrl(parent,wx.ID_ANY,"0",validator = HexValidator())
-        self.blockSizer.Add(self.blockLabel)
-        self.blockSizer.Add(self.blockEdit)
-        self.dataGrid=wx.GridSizer(4,4)
-        oldFont=self.blockEdit.GetFont()
-        newFont=wx.Font(oldFont.PointSize,wx.FONTFAMILY_TELETYPE,wx.FONTSTYLE_NORMAL,wx.FONTWEIGHT_NORMAL)
-        self.blockEdit.SetFont(newFont)
-        self.dataPoints=[]
-        for c in range(0,16):
-            dataPointEdit=wx.TextCtrl(parent,wx.ID_ANY,"00",validator = HexValidator())
-            dataPointEdit.Bind(wx.EVT_TEXT,lambda evt, temp=c: self.OnDataPointChanged(evt, temp) )
-            dataPointEdit.SetFont(newFont)
-            dataPointEdit.SetMaxLength(2)
-            dataPointEdit.SetMinSize((dataPointEdit.GetTextExtent("0000")[0],-1))
-            self.dataGrid.Add(dataPointEdit)
-            self.dataPoints.append(dataPointEdit)
-        sizer.Add(self.titleLabel,flag=wx.EXPAND|wx.ALIGN_CENTER,proportion=1)
-        sizer.Add(self.blockSizer,flag=wx.EXPAND|wx.ALIGN_CENTER,proportion=1)
-        sizer.Add(self.dataGrid)
-    
+    def validateHex(self,value):
+        valid=True
+        for char in value:
+            if not char in "0123456789ABCDEFabcdef":
+                valid=False
+        return valid
+
+    def validateHex2(self,value,insertPoint,actionCode,insertText,widgetFullname):
+        valid=True
+        index=int(widgetFullname.split(".")[-1])
+        if self.doValidate:        
+            self.insertPoint=None
+            for char in value:
+                if not char in "0123456789ABCDEFabcdef":
+                    valid=False
+            if len(value)>2 and valid:
+                valid=False
+                if actionCode=="1" and len(insertText)==1:
+                    insertPoint=int(insertPoint)
+                    if insertPoint<2:
+                        self.doValidate=False
+                        self.dataPoints[index].delete(insertPoint,insertPoint+1)
+                        self.dataPoints[index].insert(insertPoint,insertText)
+                        self.dataPoints[index].after_idle(lambda dp=self.dataPoints[index]: dp.config(validate='key'))
+                        self.OnDataPointChanged(index)
+                        self.doValidate=True
+                    elif index<15:
+                        self.dataPoints[index+1].focus_set()
+                        self.dataPoints[index+1].insert(0,insertText)
+                        self.dataPoints[index+1].icursor(1)
+            if valid and len(value)>0:
+                self.OnDataPointChanged(index,int(value,16))
+        return valid
         
-    def OnDataPointChanged(self,event,pos):
+
+        
+    def initSmall(self,parent):
+        self.titleLabel=tk.Label(parent,text=self.title())
+        self.titleLabel.grid(row=0,columnspan=4)
+
+        self.vcmd=parent.register(self.validateHex)
+        
+        
+        self.blockLabel=tk.Label(parent,text="Block address: 0x")
+        self.blockLabel.grid(row=1,column=0)
+        
+        self.blockEdit=tk.Entry(parent,validate="key",validatecommand=(self.vcmd,'%P'))
+        self.blockEdit.insert(0,"000")
+        self.blockEdit.grid(row=1,column=1,columnspan=3)
+
+        self.dataPoints=[]
+        vcmd2=parent.register(self.validateHex2)
+
+        for c in range(0,16):
+            dataPointEdit=tk.Entry(parent,name="%d"%c,validate="key",width=2,font="Courier",validatecommand=(vcmd2,'%P','%i','%d','%S','%W'))
+            dataPointEdit.bind("<FocusIn>",lambda event,val=c,s=self:s.OnEnterDataPoint(val) )
+            dataPointEdit.bind("<FocusOut>",lambda event,val=c,s=self:s.OnLeaveDataPoint(val) )
+            self.dataPoints.append(dataPointEdit)
+            dataPointEdit.grid(row=2+c/4,column=c%4)
+            
+    def OnEnterDataPoint(self,pointNum):
+        self.currentDataPoint=pointNum
+
+    def OnLeaveDataPoint(self,pointNum):
+        if self.currentDataPoint==pointNum:
+            self.OnDataPointChanged(pointNum)
+            self.currentDataPoint=None                
+        
+    def OnDataPointChanged(self,index,value=None):
         try:        
-            blockAddress=int(self.blockEdit.GetValue(),16)
+            blockAddress=int(self.blockEdit.get(),16)
         except ValueError:
             blockAddress=0
-        grovenfctag.NFCBuffer[blockAddress+pos]=int(event.GetString(),16)
+        if value==None:
+            try:
+                value=int(self.dataPoints[index].get(),16)
+            except ValueError:
+                value=0
+        grovenfctag.NFCBuffer[blockAddress+index]=value
         
     def update(self):
         try:        
-            blockAddress=int(self.blockEdit.GetValue(),16)
+            blockAddress=int(self.blockEdit.get(),16)
         except ValueError:
             blockAddress=0
-        for c in self.dataPoints:
-            if not c.HasFocus() and c.GetValue()!="%02X"%grovenfctag.NFCBuffer[blockAddress]:
-                c.SetValue("%02X"%grovenfctag.NFCBuffer[blockAddress])
+        for i,c in enumerate(self.dataPoints):
+            thisVal="%02X"%grovenfctag.NFCBuffer[blockAddress]
+            if (not i==self.currentDataPoint) and c.get()!=thisVal:
+                self.doValidate=False
+                c.delete(0,tk.END)
+                c.insert(0,"%02X"%grovenfctag.NFCBuffer[blockAddress])
+                self.doValidate=True
             blockAddress+=1
-                # set text if it isn't active

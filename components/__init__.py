@@ -15,10 +15,6 @@ from grovenfctagmodule import *
 
 digitalSensors=[GenericDigital,GroveButton,GrovePIR,GroveUltrasonic,GroveTilt]
 analogSensors=[GenericAnalog,GroveTemperature,GroveLight,GroveSound,GroveLoudness]
-
 digitalOutputs=[GroveLED]
-
-
 i2cConnections=[GroveLCDDisplay,GroveSixAxisAccelerometer,GroveNFCTagModule]
-
 allSensors=digitalSensors+analogSensors+digitalOutputs+i2cConnections

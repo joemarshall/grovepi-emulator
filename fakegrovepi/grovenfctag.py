@@ -97,4 +97,3 @@ if __name__=="__main__":
     print( readNFCData(0,16))
 
 writeNFCData(0,[11,12,13,14,15,16,17,18,19])
-

@@ -1,97 +1,101 @@
-import wx
+import Tkinter as tk
+import tkSimpleDialog  as tksd
+import ttk
+import tkMessageBox
 
-class CSVMappingDlg(wx.Dialog):
+class CSVMappingDlg(tksd.Dialog):
     
     def __init__(self, parent,csvColumns,components,lastMapping,needsTime):
-        super(CSVMappingDlg, self).__init__(parent) 
         self.needsTime=needsTime
-        self.panel = wx.Panel(self)
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        
+        self.csvColumns=csvColumns
+        self.components=components
+        self.lastMapping=lastMapping
+        self.mapping=None
+        tksd.Dialog.__init__(self,parent=parent)
+#        super(CSVMappingDlg, self).__init__(parent=parent) 
+
+    def body(self,master):
         self.combos=[]
         self.mapping={}
         self.timeColumn=None
         
-
-        if needsTime:
-            st=wx.StaticText(self.panel,label="Time column (required)")
-            st.SetBackgroundColour((0,0,0))
-            st.SetForegroundColour((255,255,255))
-            vbox.Add(st)
+        if self.needsTime:
+            st=tk.Label(master,text="Time column (required)",bg="black",fg="white")
+            st.grid(sticky=tk.E+tk.W)
             #  need a time column
-            self.timeCombo=wx.ComboBox(self.panel,style=wx.CB_READONLY)
-            self.timeCombo.AppendItems(csvColumns)
-            vbox.Add(self.timeCombo)
-        
+            self.timeComboVar=tk.StringVar()
+            self.timeCombo=ttk.Combobox(master,state="readonly",textvariable=self.timeComboVar,values=self.csvColumns)
+            self.timeCombo.grid(sticky=tk.E+tk.W)
+            # for val in self.csvColumns:
+                # if val=="time":
+                    # self.timeComboVar.set(val)
+                    # break
+            if self.timeComboVar.get()=="":
+                for val in self.csvColumns:
+                    if val.find("time")!=-1:
+                        self.timeComboVar.set(val)
+                        break
         
         sensorCombo={}
-        for comp in components:
+        for comp in self.components:
             if hasattr(comp,"setValue"):
-                st=wx.StaticText(self.panel,label=comp.title())
-                st.SetBackgroundColour((0,0,0))
-                st.SetForegroundColour((255,255,255))
+                st=tk.Label(master,text=comp.title(),bg="black",fg="white")
+                st.grid(sticky=tk.E+tk.W)
 
-                vbox.Add(st,flag=wx.RIGHT|wx.LEFT|wx.EXPAND,border=5)
                 if hasattr(comp,"getNumAxes"):
                     for c in range(0,comp.getNumAxes()):
-                        st=wx.StaticText(self.panel,label=comp.getAxisName(c))
-                        vbox.Add(st,flag=wx.LEFT|wx.RIGHT|wx.EXPAND,border=10)
-                        compCombo=wx.ComboBox(self.panel,style=wx.CB_READONLY)
-                        compCombo.Append("")
-                        compCombo.AppendItems(csvColumns)
-                        self.combos.append((compCombo,(comp.title(),c)))
-                        sensorCombo[(comp.title(),c)]=compCombo
-                        vbox.Add(compCombo,flag=wx.EXPAND|wx.RIGHT|wx.LEFT,border=5)
+                        st=tk.Label(master,text=comp.getAxisName(c),bg="#7f7f7f",fg="#000000")
+                        st.grid(sticky=tk.E+tk.W,padx=10)
+                        comboVar=tk.StringVar()
+                        compCombo=ttk.Combobox(master,state="readonly",textvariable=comboVar,values=self.csvColumns)
+                        compCombo.grid(sticky=tk.E+tk.W,padx=10)
+
+                        self.combos.append((comboVar,(comp.title(),c)))
+                        sensorCombo[(comp.title(),c)]=comboVar
                 else:
-                    compCombo=wx.ComboBox(self.panel,style=wx.CB_READONLY)
-                    compCombo.Append("")
-                    compCombo.AppendItems(csvColumns)
-                    self.combos.append((compCombo,comp.title()))
-                    sensorCombo[comp.title()]=compCombo
-                    vbox.Add(compCombo,flag=wx.EXPAND|wx.RIGHT|wx.LEFT,border=5)
-        if lastMapping!=None:
-            for (col,component) in lastMapping.items():
-                if type(component)==list:
-                    component=tuple(component)
-                if component=="TIME" and self.needsTime:
-                    self.timeCombo.SetStringSelection(col)
-                elif sensorCombo.has_key(component):
-                    sensorCombo[component].SetStringSelection(col)
-                
-        # each sensor can only take one mapping
-        hbox1=wx.BoxSizer(wx.HORIZONTAL)
-        okButton = wx.Button(self.panel, wx.ID_OK)
-        okButton.Bind(wx.EVT_BUTTON,self.OnOK)
-        cancelButton = wx.Button(self.panel, wx.ID_CANCEL)
-        hbox1.Add(okButton)
-        hbox1.Add(cancelButton, flag=wx.LEFT, border=5)
-        vbox.Add(hbox1,flag=wx.ALIGN_RIGHT|wx.TOP,border=5)
-        
-        self.panel.SetSizer(vbox)
-        self.panel.Layout()
-        vbox.Fit(self)
-        
-    def OnOK(self,event):
-        if not self.needsTime or self.timeCombo.GetSelection()!=wx.NOT_FOUND:
-            anySelected=False
-            for box,comp in self.combos:
-                if box.GetSelection()!=wx.NOT_FOUND and len(box.GetStringSelection())>0:
-                    anySelected=True
-            if not anySelected:
-                wx.MessageBox('You need to select at least one mapping from CSV column to sensor', 'Error', 
-                    wx.OK | wx.ICON_WARNING)
-                return True
-        else:
-            wx.MessageBox('You need to select a column with the time in it', 'Error', 
-                wx.OK | wx.ICON_WARNING)
-            return True
+                    comboVar=tk.StringVar()
+                    compCombo=ttk.Combobox(master,state="readonly",textvariable=comboVar,values=self.csvColumns)
+                    compCombo.grid(sticky=tk.E+tk.W)
+                    self.combos.append((comboVar,comp.title()))
+                    sensorCombo[comp.title()]=comboVar
+                    
+        if self.lastMapping!=None:
+            for (col,components) in self.lastMapping.items():
+                if col in self.csvColumns:
+                    for component in components:
+                        if type(component)==list:
+                            component=tuple(component)
+                        if component=="TIME" and self.needsTime:
+                            self.timeComboVar.set(col)
+                        elif sensorCombo.has_key(component):
+                            sensorCombo[component].set(col)
         if self.needsTime:
-            self.mapping={self.timeCombo.GetStringSelection():"TIME"}
+            return self.timeCombo
+        else:
+            return
+        
+    def validate(self):
+        if self.needsTime and self.timeComboVar.get()=="":
+            tkMessageBox.showwarning("Time column needed","You need to select a column with the time in it")
+            return 0
+        anySelected=False
+        for box,comp in self.combos:
+            if len(box.get())>0:
+                anySelected=True
+        if not anySelected:
+            tkMessageBox.showwarning("Select a mapping","You need to select at least one mapping from CSV column to sensor")
+            return 0
+            
+        if self.needsTime:
+            self.mapping={self.timeComboVar.get():["TIME"]}
         for combo,data in self.combos:
-            if combo.GetSelection()!=wx.NOT_FOUND and len(combo.GetStringSelection())>0:
-                self.mapping[combo.GetStringSelection()]=data
-        event.Skip()
-        return False
+            value=combo.get()
+            if len(value)>0:
+                if self.mapping.has_key(value):
+                    self.mapping[value].append(data)
+                else:
+                    self.mapping[value]=[data]
+        return 1
        
     def getAssignments(self):
         return self.mapping

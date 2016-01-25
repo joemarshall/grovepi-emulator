@@ -1,7 +1,7 @@
 import grovepi
 
-import wx
-import wx.propgrid as wxpg
+
+from genericanalog import *
 
 import bisect
 
@@ -136,12 +136,11 @@ TEMP_LOOKUP=[
 211.6437932,222.7296429,236.9930127,256.6190412,286.9596509,347.6819765,347.6819765]
 
 
-class GroveTemperature:
+class GroveTemperature(GenericAnalog):
         
     def __init__(self,inputNum):
-        self.pin=inputNum
-        self.value=0
-        self.needsPullup=False
+        GenericAnalog.__init__(self,inputNum)
+        self.value.set(512)
         
     def title(self):
         return "A%d: Grove Temperature Sensor"%self.pin
@@ -150,31 +149,23 @@ class GroveTemperature:
     def classDescription(cls):
         return "Grove Temperature Sensor"
 
-    def initSmall(self,parent,sizer):
-        self.label=wx.StaticText(parent,wx.ID_ANY,self.title(),style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE)
-        sizer.Add(self.label,flag=wx.EXPAND|wx.ALIGN_CENTER,proportion=0)
-        
-        self.slider=wx.Slider(parent,wx.ID_ANY,minValue=0,maxValue=1023,value=512)
-        sizer.Add(self.slider,flag=wx.EXPAND|wx.CENTER,proportion=1)
-        self.slider.Bind(wx.EVT_SLIDER,self.OnSliderChange)
-        
-    def initPropertyPage(self,parent,sizer):
-        self.propGrid=wxpg.PropertyGrid(parent, wx.ID_ANY, style=wx.propgrid.PG_SPLITTER_AUTO_CENTER| wx.propgrid.PG_AUTO_SORT)        
-        self.valueProperty=wxpg.FloatProperty("Centigrade",value=TEMP_LOOKUP[512])
+    def initPropertyPage(self,parent):
+        self.propGrid=propgrid.PropertyGrid(parent,title=self.title())        
+        self.valueProperty=propgrid.FloatProperty("Centigrade",value=TEMP_LOOKUP[512])
         self.propGrid.Append( self.valueProperty )
-        self.rawValueProperty=wxpg.IntProperty("Raw",value=512)
+        self.rawValueProperty=propgrid.IntProperty("Raw",value=0)
         self.propGrid.Append( self.rawValueProperty )
-        self.propGrid.Bind( wxpg.EVT_PG_CHANGED, self.OnPropGridChange )
-        sizer.Add(self.propGrid,flag=wx.EXPAND)
+        self.propGrid.SetCallback(self.OnPropGridChange)
+        self.propGrid.pack()
         
-    def OnPropGridChange(self,event):
-        if event.GetPropertyName()=="Raw":
-            self.setValue(event.GetPropertyValue())
+    def OnPropGridChange(self,property,value):
+        if property=="Raw":
+            self.setValue(value)
         else:
-            self.setValueC(event.GetPropertyValue())
+            self.setValueC(value)
 
     def OnSliderChange(self,event):
-        self.setValue(event.GetInt())
+        self.setValue(self.value.get())
         
     def setValueC(self,cVal):
         valueSlider=bisect.bisect_left(TEMP_LOOKUP,cVal)
@@ -185,6 +176,6 @@ class GroveTemperature:
         if value<0:value=0
         self.valueProperty.SetValue(TEMP_LOOKUP[value])
         self.rawValueProperty.SetValue(value)
-        self.slider.SetValue (value)
+        self.value.set(value)
         grovepi.anaValues[self.pin]=value
                 

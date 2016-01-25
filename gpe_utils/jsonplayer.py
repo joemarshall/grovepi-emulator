@@ -1,6 +1,5 @@
 import grovepi
 import time
-import wx
 import os
 import urllib2
 import json
@@ -18,7 +17,7 @@ class JSONPlayer:
         self.fields.extend(temp)
         
         self.assignments={}
-        self.timer=None
+        self.timerFrame=None
             
     def getName(self):
         return self.filename
@@ -33,20 +32,24 @@ class JSONPlayer:
     def startPlaying(self,frame,loop):
         if len(self.assignments)==0:
             return
-        self.timer=wx.Timer(frame)
-        frame.Bind(wx.EVT_TIMER, self.onTimerFired, self.timer)
-        self.timer.Start(0,True)
+        # this takes account that we may have paused before
+        self.timerFrame=frame
+        self.timerID=self.timerFrame.after(10,self.onTimerFired)
+        
         
     def stopPlaying(self):
-        if self.timer!=None:
-            self.timer.Stop()
-            self.timer=None
+        self.pausePlaying()
         self.curPos=0
             
     def pausePlaying(self):
-        if self.timer!=None:
-            self.timer.Stop()
-            self.timer=None
+        if self.timerFrame!=None:
+            if self.timerID!=None:
+                self.timerFrame.after_cancel(self.timerID)
+            self.timerFrame=None
+            self.timerID=None
+        
+    def playing(self):
+        return (self.timerFrame!=None)
         
     def unload(self):
         self.stopPlaying()
@@ -56,7 +59,7 @@ class JSONPlayer:
         return 0,0
         
     
-    def onTimerFired(self,event):
+    def onTimerFired(self):
         # use a short timeout as this connection should be cached now
         resp=urllib2.urlopen(self.filename,timeout=1)
         line=json.load(resp)
@@ -72,11 +75,13 @@ class JSONPlayer:
                     values[key+"-TIME_SINCE_PRESSED"]=0
             except ValueError:
                 None
-        for (key,target) in self.assignments.iteritems():
-            if type(target)!=tuple:
-                target.setValue(values[key])
-            else:
-                t,channel=target
-                t.setValue(channel,values[key])
-        self.timer.Start(1000,True)
+        for (key,targets) in self.assignments.iteritems():
+            for target in targets:
+                if type(target)!=tuple:
+                    target.setValue(values[key])
+                else:
+                    t,channel=target
+                    t.setValue(channel,values[key])
+        if self.timerFrame!=None:
+            self.timerID=self.timerFrame.after(self.updateRate,self.onTimerFired)
 

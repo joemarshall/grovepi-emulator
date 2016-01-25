@@ -40,6 +40,7 @@ class StoppableRunner(bdb.Bdb):
         
     def _runFile(self,name):
         thd=threading.Thread(target=self._runThread,args=(name,))
+        thd.daemon=True
         thd.start()
         return thd
     

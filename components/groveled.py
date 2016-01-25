@@ -1,12 +1,14 @@
 import grovepi
-import wx
-import wx.propgrid as wxpg
+
+import Tkinter as tk
+import propgrid
+
 
 class GroveLED:
     
     def __init__(self,pin):
         self.pin=pin
-        self.colour=wx.Colour(255,0,0)
+        self.colour=(255,0,0)
     
     def title(self):
         return "D%d: Grove LED:"%self.pin
@@ -15,33 +17,36 @@ class GroveLED:
     def classDescription(cls):
         return "Grove LED"
     
-    def initSmall(self,parent,sizer):
-        self.label=wx.StaticText(parent,wx.ID_ANY,self.title(),style=wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE)
-        sizer.Add(self.label,flag=wx.EXPAND|wx.ALIGN_CENTER,proportion=1)
+    def initSmall(self,parent):
+        self.label=tk.Label(parent,text=self.title())
+        self.label.grid()
     
-    def initPropertyPage(self,parent,sizer):
-        self.propGrid=wxpg.PropertyGrid(parent, wx.ID_ANY, style=wxpg.PG_SPLITTER_AUTO_CENTER| wxpg.PG_AUTO_SORT)        
-        self.valueProperty=wxpg.ColourProperty("Colour",value=self.colour)
+    def initPropertyPage(self,parent):
+        self.propGrid=propgrid.PropertyGrid(parent,title=self.title())        
+        self.valueProperty=propgrid.ColourProperty("Colour",value=self.colour)
         self.propGrid.Append( self.valueProperty )
-        sizer.Add(self.propGrid,flag=wx.EXPAND)
-        self.propGrid.Bind( wxpg.EVT_PG_CHANGED, self.OnPropGridChange )
+        self.propGrid.SetCallback(self.OnPropGridChange)
+        self.propGrid.pack()
 
-    def OnPropGridChange(self,event):
-        self.colour=event.GetPropertyValue()
+    def OnPropGridChange(self,property,value):
+        self.colour=value
+        
+    def getColourName(self,rgb):
+        return "#%02x%02x%02x"%rgb
         
     def update(self):
         value=grovepi.outValues[self.pin]
-        valueColour=wx.Colour(self.colour.Red()*value / 255,self.colour.Green()*value / 255,self.colour.Blue()*value / 255)
-        self.label.SetBackgroundColour(valueColour)
+        valueColour=(self.colour[0]*value / 255,self.colour[1]*value / 255,self.colour[2]*value / 255)
+        self.label.config(bg=self.getColourName(valueColour))
         if value<128:
-            self.label.SetForegroundColour(wx.Colour(255,255,255))
+            self.label.config(fg="white")
         else:
-             self.label.SetForegroundColour(wx.Colour(0,0,0))
-        self.label.SetLabel("%s:%3.3d"%(self.title(),value))
+            self.label.config(fg="black")
+        self.label.config(text="%s:%3.3d"%(self.title(),value))
 
     def saveConfig(self):
-        return {"r":self.colour.Red(),"g":self.colour.Green(),"b":self.colour.Blue()}
+        return {"r":self.colour[0],"g":self.colour[1],"b":self.colour[2]}
         
     def loadConfig(self,conf):
         if conf.has_key("r") and conf.has_key("g") and conf.has_key("b"):
-            self.colour=wx.Colour(conf["r"],conf["g"],conf["b"])
+            self.colour=(conf["r"],conf["g"],conf["b"])

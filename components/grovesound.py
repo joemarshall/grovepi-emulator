@@ -1,7 +1,5 @@
 import grovepi
 from genericanalog import *
-import wx
-import wx.propgrid as wxpg
 
 class GroveSound(GenericAnalog):
     
