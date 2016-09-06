@@ -2,9 +2,6 @@ import grovepi
 
 from genericdigital import *
 
-import wx
-import wx.propgrid as wxpg
-
 class GroveButton(GenericDigital):
     
     def __init__(self,inputNum):

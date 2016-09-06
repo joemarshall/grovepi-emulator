@@ -1,7 +1,6 @@
 import grovepi
 
-import wx
-import wx.propgrid as wxpg
+import propgrid
 
 from genericdigital import *
 
