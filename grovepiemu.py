@@ -24,10 +24,10 @@ DIGI_PINS=[2,3,4,5,6,7,8]
 ANA_PINS=[0,1,2]
 I2CPINS=[1,2,3]
 
-
 class AllPropertyFrame(tk.Toplevel):
     def __init__(self,parent):
         tk.Toplevel.__init__(self)
+        self.iconbitmap("main.ico")
         self.title("Properties")
         self.componentSizers={}
         
@@ -63,12 +63,12 @@ class Frame(tk.Frame):
         tk.Frame.__init__(self, master=root,width=640,height=480)
         
         self.root=root
+        self.root.wm_title(title)
         
         self.componentList={}
         self.properties=AllPropertyFrame(self)
 
         root.protocol("WM_DELETE_WINDOW", self.OnClose)
-        
         
         menuBar = tk.Menu(root)
         fileMenu=tk.Menu(menuBar,tearoff=0)
@@ -150,7 +150,7 @@ class Frame(tk.Frame):
         transportBox2=tk.Frame(csvBox)
         timeBox=tk.Frame(csvBox)
         self.csvName=tk.Label(csvBox,text="Replay: ")
-        transportButtons=[("Unload..",self.OnUnloadCSV),("File..",self.OnLoadCSV),("Server...",self.OnServerConnect)]
+        transportButtons=[("File..",self.OnLoadCSV),("Server...",self.OnServerConnect),("Clear..",self.OnUnloadCSV)]
         transportButtons2=[("[]",self.OnStopCSV),("||",self.OnPauseCSV),(">",self.OnPlayCSV),("Map Fields...",self.OnMapCSV)]
         self.csvButtons={}
         for col,(label,fn) in enumerate(transportButtons):
@@ -181,6 +181,9 @@ class Frame(tk.Frame):
         self.scriptStatus=tk.Label(scriptBox,text="")
         
         self.captureScriptButton=tk.Button(scriptBox,text="Capture script to file",command=self.OnCaptureToFile)
+        self.runRemoteButton=tk.Button(scriptBox,text="Run on real PI via SSH",command=self.OnRunRemote)
+        self.runLocalButton=tk.Button(scriptBox,text="Run in emulator",command=self.OnRunLocal)
+        self.setAddressButton=tk.Button(scriptBox,text="Set remote address",command=self.OnSetRemote)
 
         pyButtonBox=tk.Frame(scriptBox)
         pyButtons=[("Load...",self.OnLoadPY),("Clear",self.OnClearPY),("[]",self.OnStopPY),(">",self.OnRunPY)]
@@ -194,6 +197,9 @@ class Frame(tk.Frame):
         self.scriptStatus.grid()
         pyButtonBox.grid()
         self.captureScriptButton.grid()
+        self.runLocalButton.grid(pady=(10,0))
+        self.runRemoteButton.grid()
+        self.setAddressButton.grid()
         scriptBox.grid(row=7,column=1)
         
         root.bind("<Button-3>", self.OnContextMenu)
@@ -203,6 +209,8 @@ class Frame(tk.Frame):
         self.player=None
         self.scriptPath=None
         self.scriptRunner=None
+        self.remoteScript=False
+        self.remoteAddress=""
         self.lastAssignments={}
         self.settingsFile=None
         self.csvPath=None
@@ -216,8 +224,29 @@ class Frame(tk.Frame):
             self.loadSettingsIni(os.path.join(os.path.dirname(__file__),"grovepiemu.ini"),True)
         self.root.after(50,self.update)
         
+    def OnSetRemote(self):
+        oldAddress="ubi@"
+        if self.remoteAddress!=None:
+            oldAddress=self.remoteAddress
+        newAddress= tksd.askstring(parent=self.root,prompt="Enter the username and host of the Raspberry Pi to run the script on\nin the format: username@192.168.1.1",title="Run script remotely",initialvalue=oldAddress)
+        if newAddress==None:
+            return
+        if newAddress.find("@")<0:
+            tkm.showwarning("Bad address",message="Address should be in the format username@address\nOn the lab Raspberry Pis, username is usually ubi, and address looks like 10.N.N.N")
+            return
+        self.remoteAddress=newAddress
+        
+    def OnRunRemote(self):
+        if self.remoteAddress==None or len(self.remoteAddress)==0:
+            self.OnSetRemote()
+        if self.remoteAddress!=None and len(self.remoteAddress)>0:
+            self.remoteScript=True
+            self.OnRunPY()
 
-            
+    def OnRunLocal(self):
+        self.remoteScript=False
+        self.OnRunPY()
+        
             
     def OnCaptureToFile(self):
         if self.scriptRunner!=None and self.scriptRunner.capturing() and self.scriptRunner.running():
@@ -255,10 +284,14 @@ class Frame(tk.Frame):
         if self.scriptRunner!=None and self.scriptRunner.running():
             self.scriptRunner.stop()
         if self.scriptPath==None:
-            self.scriptNameLabel.config(text="GrovePi Python Script: ")
+            self.scriptNameLabel.config(text="No python script loaded")
         else:
-            self.scriptNameLabel.config(text="GrovePi Python Script: %s"%os.path.basename(self.scriptPath))
-            self.scriptRunner=gpe_utils.StoppableRunner(self.scriptPath,captureFile=self.nextCaptureFile)
+            if self.remoteScript:
+                self.scriptNameLabel.config(text="Python script: %s"%os.path.basename(self.scriptPath))
+                self.scriptRunner=gpe_utils.RemoteRunner(self.scriptPath,self.remoteAddress,captureFile=self.nextCaptureFile)
+            else:
+                self.scriptNameLabel.config(text="Python script: %s"%os.path.basename(self.scriptPath))
+                self.scriptRunner=gpe_utils.StoppableRunner(self.scriptPath,captureFile=self.nextCaptureFile)
             self.nextCaptureFile=None
     
     def OnStopPY(self):
@@ -484,6 +517,9 @@ Currently has support for the following sensors:
                 else:
                     self.OnUnloadCSV()
                 self.OnLoadPY(reloadCurrent=True)
+                self.remoteScript=allConfig["remoteScript"]
+                self.remoteAddress=allConfig["remoteAddress"]
+
  #               if fromIni:
  #                   self.settingsFile=self.fullPath(allConfig["currentFileOpen"],name) 
  #                   if self.settingsFile!=None:
@@ -523,6 +559,8 @@ Currently has support for the following sensors:
                 allConfig["pythonScript"]=self.relPath(self.scriptPath,name)
                 allConfig["sensorAssignments"]=self.lastAssignments
                 allConfig["csvPath"]=self.relPath(self.csvPath,name)
+                allConfig["remoteScript"]=self.remoteScript
+                allConfig["remoteAddress"]=self.remoteAddress
     #            allConfig["currentFileOpen"]=self.relPath(self.settingsFile,name)
                 json.dump(allConfig,file)
         except IOError:
@@ -625,13 +663,24 @@ Currently has support for the following sensors:
             self.csvButtons["||"].config(bg="#ff7f7f")
         self.captureScriptButton.config(bg="gray80")
         self.captureScriptButton.config(text="Capture script to file")
+        if self.remoteScript:
+            self.runRemoteButton.config(bg="#7fff7f")
+            self.runLocalButton.config(bg="gray80")
+        else:
+            self.runRemoteButton.config(bg="gray80")
+            self.runLocalButton.config(bg="#7f7fff")
+
+        
         if self.scriptRunner!=None:
             if self.scriptRunner.running():
                 self.scriptStatus.config(text="Running")
+                if self.remoteScript:
+                    self.scriptStatus.config(text="Run at: %s"%self.remoteAddress)                
+                else:
+                    self.scriptStatus.config(text="Running in emulator")                
                 if self.scriptRunner.capturing():
                     self.captureScriptButton.config(bg="#ff7f7f")
-                    self.captureScriptButton.config(text="Stop capturing")
-                
+                    self.captureScriptButton.config(text="Stop capturing")                
             else:
                 self.scriptStatus.config(text="Stopped")                
         else:
@@ -647,10 +696,12 @@ Currently has support for the following sensors:
 
     
 root =tk.Tk()                             #main window
-
+root.iconbitmap("main.ico")
 top = Frame(root,"GrovePi Emulator - <untitled>")
 #top.Show()
 
-
-root.mainloop()
+try:
+    root.mainloop()
+except KeyboardInterrupt:
+    top.OnClose()
     

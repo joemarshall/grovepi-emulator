@@ -49,6 +49,9 @@ class StoppableRunner(bdb.Bdb):
         sys.argv=[]
         self.captureID=threading.currentThread().ident
         _prt.add(self.captureID,self.captureFile)
+        self._payload(name)
+        
+    def _payload(self,name):
         self.run('execfile(\'%s\')'%(name.replace('\\','\\\\')))
         
     def stop(self):
