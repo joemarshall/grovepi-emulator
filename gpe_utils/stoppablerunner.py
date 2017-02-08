@@ -8,21 +8,25 @@ class _ThreadPrinter:
         self.saveThreads={}
         self.originalStdout=sys.stdout
         sys.stdout=self
-
+       
     def write(self, value):
         saveThread = self.saveThreads.get(threading.currentThread().ident)
         if saveThread!=None:
-#            self.originalStdout.write("THD:")
-            saveThread.write(value)
+            saveThread.write(value.encode("ASCII"))
         self.originalStdout.write(value)
 
     def add(self,id,filename):
         if filename!=None:
-            self.saveThreads[id]=open(filename,"w",buffering=0)
+            self.saveThreads[id]=open(filename,"wb",buffering=0)
         
     def remove(self,id):
         if id in self.saveThreads:
             del self.saveThreads[id]
+            
+    def flush(self):
+        self.originalStdout.flush()
+        for file in self.saveThreads.values():
+            file.flush()
             
 _prt = _ThreadPrinter()
             
@@ -32,6 +36,9 @@ class StoppableRunner(bdb.Bdb):
         self._stop=False
         self.captureFile=captureFile
         self.captureID=None
+        print("---------------- LAUNCHING PYTHON SCRIPT IN EMULATOR ----------------")
+        
+        
         self.thread=self._runFile(name)
     
     def dispatch_line(self,frame):
@@ -53,7 +60,8 @@ class StoppableRunner(bdb.Bdb):
         self._payload(name)
         
     def _payload(self,name):
-        self.run('execfile(\'%s\')'%(name.replace('\\','\\\\')))
+        self.run('exec(open(\'%s\').read())'%(name.replace('\\','\\\\')))
+#        self.run('execfile(\'%s\')'%(name.replace('\\','\\\\')))
         
     def stop(self):
         global _prt
@@ -67,7 +75,7 @@ class StoppableRunner(bdb.Bdb):
         return self.captureFile!=None
         
 if __name__=="__main__":        
-    # this line I think makes it so that any loaded python files will get their grovepi from the right place where the fake grovepi bits live  
+    # this line makes it so that any loaded python files will get their grovepi from the right place where the fake grovepi bits live  
     # in preference to any that happen to be in the same directory as them
     sys.path=[os.path.join(os.path.abspath(os.path.dirname(__file__)),"fakegrovepi")]+sys.path
     a=StoppableRunner("test.py")

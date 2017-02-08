@@ -29,6 +29,8 @@ class _ReadableTempFile:
         self.file=None
         self.name=None    
 
+_HOST_KEY_CACHE={}
+        
 class RemoteRunner:
         
     def __init__(self,name,address,captureFile=None):
@@ -45,22 +47,25 @@ class RemoteRunner:
 
         
     def stop(self):
-        if self.process!=None:
-            self.process.terminate()
-            self.process=None
+        while self.running():
+            if self.process!=None:
+                self.process.terminate()
+                break
         if self.thread!=None:
             self.thread.join()
         
     def _bypassPuttyHostAuth(self,cmdCopy):
-        popen = subprocess.Popen(cmdCopy, universal_newlines=True,stdin=open(os.devnull),stdout=None,stderr=subprocess.PIPE,bufsize=1)
-#        popen = subprocess.Popen(cmdCopy, universal_newlines=True,stdin=open(os.devnull),stdout=open(os.devnull),stderr=subprocess.PIPE,bufsize=1)
-        HOST_ERROR_STR="ssh-rsa 1024 "
+        print("Loading host key")
+#        popen = subprocess.Popen(cmdCopy, universal_newlines=True,stdin=open(os.devnull),stdout=None,stderr=subprocess.PIPE,bufsize=1)
+        popen = subprocess.Popen(cmdCopy, universal_newlines=True,stdin=open(os.devnull),stdout=open(os.devnull),stderr=subprocess.PIPE,bufsize=1)
+        HOST_ERROR_STR="ssh-rsa "
         for line in popen.stderr:
             errPos=line.find(HOST_ERROR_STR)
             if errPos>=0:
                 popen.stderr.close()
                 popen.terminate()
-                return line.strip()[errPos+len(HOST_ERROR_STR):]
+                splitLine=line.split(" ")
+                return splitLine[-1].strip("\n")
         return None
 
     def _runThread(self,name):
@@ -79,7 +84,11 @@ class RemoteRunner:
         if os.name=="nt":
             # on windows we use plink and pscp to copy and run
             cmdCopy=_PUTTY_DIR+ os.sep+"pscp -i %s %s %s:%s"%(_PUTTY_KEY,codeName,self.address,os.path.basename(codeName))
-            host_key=self._bypassPuttyHostAuth(cmdCopy)
+            if self.address in _HOST_KEY_CACHE:
+                host_key=_HOST_KEY_CACHE[self.address]
+            else:
+                host_key=self._bypassPuttyHostAuth(cmdCopy)
+                _HOST_KEY_CACHE[self.address]=host_key
             host_key_str=""
             if host_key!=None:
                 host_key_str="-hostkey %s"%host_key
@@ -95,11 +104,11 @@ class RemoteRunner:
         if retVal==0:
             print("-------------------------------- LAUNCHING -------------------------------")
             if self.captureFile!=None:
-                logFile=open(self.captureFile,"wb",buffering=1)
+                logFile=open(self.captureFile,"wb",buffering=0)
                 self.process = subprocess.Popen(cmdRun, universal_newlines=True,stdin=open(os.devnull),stdout=subprocess.PIPE,bufsize=1)
                 for line in iter(self.process.stdout.readline,''):
                     print(line, end=' ')                    
-                    logFile.write(line)
+                    logFile.write(line.encode("ASCII"))
                     logFile.flush()
          
                 logFile.close()

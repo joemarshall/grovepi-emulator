@@ -264,7 +264,7 @@ class Frame(tk.Frame):
         self.scriptPath=None
         self.OnRunPY()
             
-    def OnLoadPY(self,reloadCurrent=False):
+    def OnLoadPY(self,reloadCurrent=False,start=True):
         if not reloadCurrent:
             options={}
             options['defaultextension'] = '.py'
@@ -275,11 +275,16 @@ class Frame(tk.Frame):
             if not filename:
                 return
             self.scriptPath=filename
-        self.OnRunPY()
+        if self.scriptPath==None:
+            self.scriptNameLabel.config(text="No python script loaded")
+        else:
+            self.scriptNameLabel.config(text="Python script: %s"%os.path.basename(self.scriptPath))
+        if start:
+            self.OnRunPY()
         
     def OnRunPY(self):
         if self.scriptRunner!=None and self.scriptRunner.running():
-            self.scriptRunner.stop()
+            self.scriptRunner.stop()            
         if self.scriptPath==None:
             self.scriptNameLabel.config(text="No python script loaded")
         else:
@@ -404,7 +409,7 @@ class Frame(tk.Frame):
             if len(assignmentsFixed)>0:
                 self.player.setFieldAssignments(assignmentsFixed)
                 self.csvName.config(text="Replay data: %s"%(self.player.getName()))
-                self.player.startPlaying(self.root,True)
+                self.player.startPlaying(self.root,False)
         else:
             if timeColumn!=None and len(assignmentsFixed)>0:
                 self.player.setFieldAssignments(timeColumn,assignmentsFixed)
@@ -419,8 +424,15 @@ class Frame(tk.Frame):
             self.player.pausePlaying()
         
     def OnPlayCSV(self):
+        if self.remoteScript:
+            tkm.showwarning("CSV Playback only works locally",message="You can only play CSV files back in the emulator,\nthe PI always uses real sensors.\nSwitching to emulated script.")
+            if self.scriptRunner!=None and self.scriptRunner.running():            
+                self.scriptRunner.stop()               
+                self.OnRunLocal()
         if self.player!=None:
-            self.player.startPlaying(self.root,True)                       
+            if self.player.playing():
+                self.player.stopPlaying()
+            self.player.startPlaying(self.root,False)
             
     def OnSave(self,event=None):
         if self.settingsFile==None:
@@ -477,8 +489,8 @@ Currently has support for the following sensors:
 """
         for c in components.allSensors:
             description+=c.classDescription()+"\n"
-        description+="\nBy Joe Marshall\nhttp://www.cs.nott.ac.uk/~jqm\n\nDo what you want with the code. Any questions, email joe.marshall@nottingham.ac.uk "
-        tkm.showinfo("Grove PI Emulation Environment 1.1",message=description)
+        description+="\nBy Joe Marshall\nhttp://www.cs.nott.ac.uk/~pszjm2\n\nDo what you want with the code. Any questions, email joe.marshall@nottingham.ac.uk "
+        tkm.showinfo("Grove PI Emulation Environment 1.2",message=description)
 
     
     def loadSettingsIni(self,name,fromIni=False):
@@ -513,19 +525,21 @@ Currently has support for the following sensors:
                         self.OnLoadCSV(True)
                 else:
                     self.OnUnloadCSV()
-                self.OnLoadPY(reloadCurrent=True)
                 self.remoteScript=allConfig["remoteScript"]
                 self.remoteAddress=allConfig["remoteAddress"]
+                self.OnLoadPY(reloadCurrent=True,start=False)
 
  #               if fromIni:
  #                   self.settingsFile=self.fullPath(allConfig["currentFileOpen"],name) 
  #                   if self.settingsFile!=None:
  #                       self.SetTitle("GrovePi Emulator - %s"%self.settingsFile)
 
- #       except IOError:
- #           print "Couldn't load config ",name
+        except IOError:
+            print( "Couldn't load config ",name)
         except KeyError:
             print("Key missing")
+        except ValueError:
+            print("JSON config object bad")
 
     def fullPath(self,file,name):
         if file==None:
@@ -543,22 +557,22 @@ Currently has support for the following sensors:
             
     def saveSettingsIni(self,name):
         try:
+            allConfig={}
+            modules={}
+            for (pin,type),component in self.componentList.items():
+                modConfig=None
+                if hasattr(component,"saveConfig"):
+                    modConfig=component.saveConfig()
+                modules["%d%s"%(pin,type)]=[component.classDescription(),modConfig]
+            allConfig["modules"]=modules
+            
+            allConfig["pythonScript"]=self.relPath(self.scriptPath,name)
+            allConfig["sensorAssignments"]=self.lastAssignments
+            allConfig["csvPath"]=self.relPath(self.csvPath,name)
+            allConfig["remoteScript"]=self.remoteScript
+            allConfig["remoteAddress"]=self.remoteAddress
+#            allConfig["currentFileOpen"]=self.relPath(self.settingsFile,name)
             with open(name,'w') as file:
-                allConfig={}
-                modules={}
-                for (pin,type),component in self.componentList.items():
-                    modConfig=None
-                    if hasattr(component,"saveConfig"):
-                        modConfig=component.saveConfig()
-                    modules["%d%s"%(pin,type)]=[component.classDescription(),modConfig]
-                allConfig["modules"]=modules
-                
-                allConfig["pythonScript"]=self.relPath(self.scriptPath,name)
-                allConfig["sensorAssignments"]=self.lastAssignments
-                allConfig["csvPath"]=self.relPath(self.csvPath,name)
-                allConfig["remoteScript"]=self.remoteScript
-                allConfig["remoteAddress"]=self.remoteAddress
-    #            allConfig["currentFileOpen"]=self.relPath(self.settingsFile,name)
                 json.dump(allConfig,file)
         except IOError:
             print("Couldn't save settings file")
@@ -651,13 +665,17 @@ Currently has support for the following sensors:
             self.csvTimeStart.config(text=time.strftime("%H:%M:%S",time.gmtime(ofsTime)))
             self.csvTimeReal.config(text=time.strftime("%H:%M:%S (%d/%m/%Y)",time.gmtime(realTime)))
         if self.player==None or not self.player.playing():
-            self.csvButtons[">"].config(bg="pale green")
-            self.csvButtons["[]"].config(bg="red")
-            self.csvButtons["||"].config(bg="red")
+            self.csvButtons[">"].config(bg="pale green",relief=tk.RAISED)
+            if self.player!=None and self.player.paused():
+                self.csvButtons["[]"].config(bg="#ff9f9f",relief=tk.RAISED)
+                self.csvButtons["||"].config(bg="red",relief=tk.SUNKEN)           
+            else:
+                self.csvButtons["[]"].config(bg="red",relief=tk.SUNKEN)
+                self.csvButtons["||"].config(bg="#ff9f9f",relief=tk.RAISED)
         else:
-            self.csvButtons[">"].config(bg="green")
-            self.csvButtons["[]"].config(bg="#ff7f7f")
-            self.csvButtons["||"].config(bg="#ff7f7f")
+            self.csvButtons[">"].config(bg="#00ff00",relief=tk.SUNKEN)
+            self.csvButtons["[]"].config(bg="#ff9f9f",relief=tk.RAISED)
+            self.csvButtons["||"].config(bg="#ff9f9f",relief=tk.RAISED)
         self.captureScriptButton.config(bg="gray80")
         self.captureScriptButton.config(text="Capture script to file")
         if self.remoteScript:
@@ -681,7 +699,7 @@ Currently has support for the following sensors:
             else:
                 self.scriptStatus.config(text="Stopped")                
         else:
-            self.scriptStatus.config(text="No script loaded")
+            self.scriptStatus.config(text="Stopped")
         self.root.after(50,self.update)
         
         

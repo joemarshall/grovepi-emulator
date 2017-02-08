@@ -1,14 +1,18 @@
 import grovepi
 import time
 import os
-import urllib2
+import sys
+if sys.version_info.major<3:
+    import urllib2 as url
+else: 
+    import urllib.request as url
 import json
 
 class JSONPlayer:
     def __init__(self,name):
         self.filename=name
 
-        resp=urllib2.urlopen(self.filename,timeout=5)
+        resp=url.urlopen(self.filename,timeout=5)
         values=json.load(resp)
         self.fields=values.keys()
         temp=[]
@@ -53,6 +57,9 @@ class JSONPlayer:
         
     def unload(self):
         self.stopPlaying()
+        
+    def paused(self):
+        return false
     
     # time since start of file, time as unix time
     def getTimes(self):
@@ -61,7 +68,7 @@ class JSONPlayer:
     
     def onTimerFired(self):
         # use a short timeout as this connection should be cached now
-        resp=urllib2.urlopen(self.filename,timeout=1)
+        resp=url.urlopen(self.filename,timeout=1)
         line=json.load(resp)
         values={}
         for key,val in line.items():
@@ -75,7 +82,7 @@ class JSONPlayer:
                     values[key+"-TIME_SINCE_PRESSED"]=0
             except ValueError:
                 None
-        for (key,targets) in self.assignments.iteritems():
+        for (key,targets) in self.assignments.items():
             for target in targets:
                 if type(target)!=tuple:
                     target.setValue(values[key])

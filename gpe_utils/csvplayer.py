@@ -4,7 +4,7 @@ import grovepi
 import time
 import os
 
-from tkimports import *
+from .tkimports import *
 
 class CSVPlayer:
     def __init__(self,name):
@@ -77,6 +77,9 @@ class CSVPlayer:
         
     def playing(self):
         return (self.timerFrame!=None)
+        
+    def paused(self):
+        return (self.timerFrame==None and self.curPos!=0)
 
     def unload(self):
         self.stopPlaying()
@@ -91,8 +94,7 @@ class CSVPlayer:
     
     def onTimerFired(self):
         timeSinceStart=time.time()-self.playStartRealTime
-        print("curpos",self.curPos)
-        for (key,targets) in self.assignments.iteritems():
+        for (key,targets) in self.assignments.items():
             for target in targets:
                 if type(target)!=tuple:
                     target.setValue(self.allLines[self.curPos][key])
@@ -113,4 +115,6 @@ class CSVPlayer:
                 self.playStartRealTime=time.time()
                 if self.timerFrame!=None:
                     self.timerID=self.timerFrame.after(10,self.onTimerFired)
+            else:
+                self.stopPlaying()
 

@@ -1,4 +1,4 @@
-from tkimports import *
+from .tkimports import *
 
 class CSVMappingDlg(tksd.Dialog):
     

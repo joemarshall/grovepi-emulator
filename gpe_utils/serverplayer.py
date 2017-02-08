@@ -6,7 +6,7 @@ import sys
 if sys.version_info.major<3:
     import urllib2 as url
 else: 
-    import urllib.requests as url
+    import urllib.request as url
 
 import json
 
@@ -42,6 +42,8 @@ class ServerPlayer:
         self.timerFrame=frame
         self.timerID=self.timerFrame.after(10,self.onTimerFired)
         
+    def paused(self):
+        return false
         
     def stopPlaying(self):
         self.pausePlaying()
@@ -78,7 +80,7 @@ class ServerPlayer:
                     values[key]=int(val)
                 except ValueError:
                     values[key]=float(val)
-            for (key,targets) in self.assignments.iteritems():
+            for (key,targets) in self.assignments.items():
                 for target in targets:
                     if type(target)!=tuple:
                         target.setValue(values[key])
