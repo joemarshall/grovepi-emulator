@@ -1,4 +1,3 @@
-import ttk
 from gpe_utils.tkimports import *
 
 class CSVMappingDlg(tksd.Dialog):
