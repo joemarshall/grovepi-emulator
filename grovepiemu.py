@@ -454,6 +454,7 @@ class Frame(tk.Frame):
             self.scriptRunner.stop()
         self.scriptPath=None
         self.scriptNameLabel.config(text="GrovePi Python Script: ")
+        self.csvPath=None
             
     def OnSaveAs(self,event=None):
         options={}
@@ -568,7 +569,10 @@ Currently has support for the following sensors:
             
             allConfig["pythonScript"]=self.relPath(self.scriptPath,name)
             allConfig["sensorAssignments"]=self.lastAssignments
-            allConfig["csvPath"]=self.relPath(self.csvPath,name)
+            if self.csvPath!=None and len(self.csvPath)>0:
+                allConfig["csvPath"]=self.relPath(self.csvPath,name)
+            else:
+                allConfig["csvPath"]=""
             allConfig["remoteScript"]=self.remoteScript
             allConfig["remoteAddress"]=self.remoteAddress
 #            allConfig["currentFileOpen"]=self.relPath(self.settingsFile,name)
