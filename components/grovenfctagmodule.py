@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import grovenfctag
 
-import Tkinter as tk
+from gpe_utils.tkimports import *
 from . import propgrid
 
 

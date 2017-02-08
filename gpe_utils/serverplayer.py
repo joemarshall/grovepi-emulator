@@ -2,13 +2,18 @@ from __future__ import print_function
 import grovepi
 import time
 import os
-import urllib2
+import sys
+if sys.version_info.major<3:
+    import urllib2 as url
+else: 
+    import urllib.requests as url
+
 import json
 
 class ServerPlayer:
     def __init__(self,name):
         self.filename=name
-        resp=urllib2.urlopen(self.filename,timeout=5)
+        resp=url.urlopen(self.filename,timeout=5)
         try:
           self.updateRate=int(resp.info()["Update-Rate"])
         except KeyError:
@@ -64,7 +69,7 @@ class ServerPlayer:
     def onTimerFired(self):
         # use a short timeout as this connection should be cached now
         try:
-            resp=urllib2.urlopen(self.filename,timeout=1)
+            resp=url.urlopen(self.filename,timeout=1)
             header=resp.readline().split(",")
             srcvals=resp.readline().split(",")
             values={}

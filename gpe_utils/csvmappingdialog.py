@@ -1,7 +1,5 @@
-import Tkinter as tk
-import tkSimpleDialog  as tksd
 import ttk
-import tkMessageBox
+from gpe_utils.tkimports import *
 
 class CSVMappingDlg(tksd.Dialog):
     
@@ -76,14 +74,14 @@ class CSVMappingDlg(tksd.Dialog):
         
     def validate(self):
         if self.needsTime and self.timeComboVar.get()=="":
-            tkMessageBox.showwarning("Time column needed","You need to select a column with the time in it")
+            tkm.showwarning("Time column needed","You need to select a column with the time in it")
             return 0
         anySelected=False
         for box,comp in self.combos:
             if len(box.get())>0:
                 anySelected=True
         if not anySelected:
-            tkMessageBox.showwarning("Select a mapping","You need to select at least one mapping from CSV column to sensor")
+            tkm.showwarning("Select a mapping","You need to select at least one mapping from CSV column to sensor")
             return 0
             
         if self.needsTime:

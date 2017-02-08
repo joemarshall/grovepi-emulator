@@ -3,10 +3,6 @@ from __future__ import print_function
 #
 # 
 
-import Tkinter as tk
-import tkMessageBox as tkm
-import tkFileDialog as tkfd
-import tkSimpleDialog  as tksd
 
 import os    
 import sys
@@ -14,12 +10,12 @@ import sys
 # in preference to any that happen to be in the same directory as them
 sys.path=[os.path.join(os.path.abspath(os.path.dirname(__file__)),"fakegrovepi")]+sys.path
 
+import gpe_utils
+from gpe_utils.tkimports import *
 import components
 import threading
 import time
 import json
-import gpe_utils
-import urllib2
 
 DIGI_PINS=[2,3,4,5,6,7,8]
 ANA_PINS=[0,1,2]

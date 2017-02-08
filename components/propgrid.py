@@ -1,6 +1,5 @@
 from __future__ import print_function
-import Tkinter as tk
-import tkColorChooser as tkcc
+from gpe_utils.tkimports import *
 
 
 class PropertyGrid(tk.Frame):

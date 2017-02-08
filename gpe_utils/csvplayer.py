@@ -4,7 +4,7 @@ import grovepi
 import time
 import os
 
-import Tkinter as tk
+from gpe_utils.tkimports import *
 
 class CSVPlayer:
     def __init__(self,name):

@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import grove6axis
 
-import Tkinter as tk
+from gpe_utils.tkimports import *
 from . import propgrid
 
 
