@@ -179,4 +179,8 @@ class GroveTemperature(GenericAnalog):
         self.rawValueProperty.SetValue(value)
         self.value.set(value)
         grovepi.anaValues[self.pin]=value
-                
+
+    def getCSVCode(self):
+        return {"imports":["grovepi"],"reader":"grovepi.analogRead(%d)"%self.pin,"variable":"temperature%d"%self.pin}
+
+        

@@ -11,3 +11,5 @@ class GroveSound(GenericAnalog):
     def classDescription(cls):
         return "Grove Sound Sensor"
 
+    def getCSVCode(self):
+        return {"imports":["grovepi"],"reader":"grovepi.analogRead(%d)"%self.pin,"variable":"sound%d"%self.pin}

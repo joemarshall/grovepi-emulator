@@ -43,4 +43,7 @@ class GenericAnalog:
         self.valueProperty.SetValue(value)
         self.value.set(value)
         grovepi.anaValues[self.pin]=value
+        
+    def getCSVCode(self):
+        return {"imports":["grovepi"],"reader":"grovepi.analogRead(%d)"%self.pin,"variable":"analog%d"%self.pin}
                 

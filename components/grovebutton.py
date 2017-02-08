@@ -51,4 +51,8 @@ class GroveButton(GenericDigital):
             grovepi.digValues[self.pin]=1
         else:
             grovepi.digValues[self.pin]=0
-                
+
+    def getCSVCode(self):
+        return {"imports":["grovepi"],"reader":"grovepi.digitalRead(%d)"%self.pin,"variable":"button%d"%self.pin}
+
+            

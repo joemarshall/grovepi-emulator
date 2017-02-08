@@ -73,6 +73,9 @@ class Frame(tk.Frame):
         m_open=fileMenu.add_command(label="Open", underline=0,accelerator="Ctrl+O",command=self.OnOpen)
         m_save=fileMenu.add_command(label="Save", underline=0,accelerator="Ctrl+S",command=self.OnSave)
         m_saveas=fileMenu.add_command(label="Save As",underline=5,accelerator="Ctrl+Shift+S", command=self.OnSaveAs)
+        fileMenu.add_separator()
+        m_writePython=fileMenu.add_command(label="Write Python for Current Sensors",command=self.OnWritePython,underline=6,accelerator="Ctrl+P")
+        fileMenu.add_separator()      
         m_exit = fileMenu.add_command(label="Exit",underline=2,accelerator="Ctrl+X", command=self.OnClose)
 
         root.bind_all("<Control-n>", self.OnNew)
@@ -80,6 +83,7 @@ class Frame(tk.Frame):
         root.bind_all("<Control-s>", self.OnSave)
         root.bind_all("<Control-S>", self.OnSaveAs)
         root.bind_all("<Control-x>", self.OnClose)
+        root.bind_all("<Control-p>", self.OnWritePython)
         
         menuBar.add_cascade(label="File",menu=fileMenu,underline=0)
         
@@ -199,10 +203,8 @@ class Frame(tk.Frame):
         self.setAddressButton.grid()
         scriptBox.grid(row=7,column=1)
         
-        root.bind("<Button-3>", self.OnContextMenu)
-        
-        
-        
+        root.bind("<Button-3>", self.OnContextMenu)       
+               
         self.player=None
         self.scriptPath=None
         self.scriptRunner=None
@@ -220,6 +222,23 @@ class Frame(tk.Frame):
         else:
             self.loadSettingsIni(os.path.join(os.path.dirname(__file__),"grovepiemu.ini"),True)
         self.root.after(50,self.update)
+        
+    def OnWritePython(self):
+        options={}
+        options['defaultextension'] = '.csv'
+        options['filetypes'] = [('Python script', '.py')]
+        options['parent'] = self.root
+        options['title'] = 'Generate a python script to capture current sensor setup'    
+        filename=tkfd.asksaveasfilename(**options)
+        if not filename:
+            return
+        pythonText=gpe_utils.generatePython(self.componentList.values())
+        file=open(filename,"wb")
+        file.write(pythonText.encode("ASCII"))
+        file.close()
+        self.scriptPath=filename
+            
+
         
     def OnSetRemote(self):
         oldAddress="ubi@"

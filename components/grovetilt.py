@@ -24,4 +24,7 @@ class GroveTilt(GenericDigital):
         self.propGrid.Append( self.valueProperty )
         self.propGrid.SetCallback(self.OnPropGridChange)
         self.propGrid.pack()
-                
+
+    def getCSVCode(self):
+        return {"imports":["grovepi"],"reader":"grovepi.digitalRead(%d)"%self.pin,"variable":"tilt%d"%self.pin}
+        

@@ -70,4 +70,6 @@ class GroveSixAxisAccelerometer:
             self.labelM.config(text="Mag: {: 7.3f} {: 7.3f} {: 7.3f}".format(*grove6axis.magVals))
         properties[axisIndex].SetValue(value)
         
+    def getCSVCode(self):
+        return {"imports":["grove6axis"],"readall":"(acc_x,acc_y,acc_z),(mag_x,mag_y,mag_z)=grove6axis.getAccel(),grove6axis.getMag()","variables":["acc_x","acc_y","acc_z","mag_x","mag_y","mag_z"],"types":["%f","%f","%f","%f","%f","%f"]}
                 
