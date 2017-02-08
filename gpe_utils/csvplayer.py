@@ -4,7 +4,7 @@ import grovepi
 import time
 import os
 
-from gpe_utils.tkimports import *
+from tkimports import *
 
 class CSVPlayer:
     def __init__(self,name):

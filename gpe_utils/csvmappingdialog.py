@@ -1,4 +1,4 @@
-from gpe_utils.tkimports import *
+from tkimports import *
 
 class CSVMappingDlg(tksd.Dialog):
     
