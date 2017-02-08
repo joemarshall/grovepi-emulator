@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Todo: RFID module, RFID tag module
 #
 # 
@@ -47,7 +48,7 @@ class AllPropertyFrame(tk.Toplevel):
         newFrame.grid(row=rowNum)
         
     def removeSensorObject(self,sensorObject):
-        if self.componentSizers.has_key(sensorObject):
+        if sensorObject in self.componentSizers:
             sizer=self.componentSizers[sensorObject]
             for child in sizer.winfo_children():
                 child.destroy()
@@ -528,7 +529,7 @@ Currently has support for the following sensors:
  #       except IOError:
  #           print "Couldn't load config ",name
         except KeyError:
-            print "Key missing"
+            print("Key missing")
 
     def fullPath(self,file,name):
         if file==None:
@@ -564,7 +565,7 @@ Currently has support for the following sensors:
     #            allConfig["currentFileOpen"]=self.relPath(self.settingsFile,name)
                 json.dump(allConfig,file)
         except IOError:
-            print "Couldn't save settings file"
+            print("Couldn't save settings file")
     
     # a)which things are connected 
 # b)any config settings on them e.g.LED colour, generic digital pullup (and what?). Most modules won't have any config I think
@@ -596,7 +597,7 @@ Currently has support for the following sensors:
                     for index,classObj in enumerate(components.i2cConnections):
                         menu.add_command(label=classObj.classDescription(),command=lambda i=index,p=pin: self.OnSelectI2c(i+1,p))
 
-                if self.componentList.has_key((pin,type)):
+                if (pin,type) in self.componentList:
                     menu.add_separator()
                     self.selectedComponent=(pin,type)
                     menu.add_command(label="Disconnect "+self.componentList[(pin,type)].title(),command=self.OnDeleteComponent)
@@ -630,7 +631,7 @@ Currently has support for the following sensors:
         component.initSmall(sizer)
                 
     def removeComponent(self,pin,type,replacing=False):
-        if self.componentList.has_key((pin,type)):
+        if (pin,type) in self.componentList:
             component=self.componentList[(pin,type)]
             if hasattr(component,"onComponentDestroy"):
                 component.onComponentDestroy()

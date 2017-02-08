@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 import grovepi
 
 import Tkinter as tk
-import propgrid
+from . import propgrid
 
 class GroveUltrasonic:
     

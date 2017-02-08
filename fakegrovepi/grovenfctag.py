@@ -13,6 +13,7 @@
         print (grovenfctag.readNFCData(0,16)) # display the first 16 bytes of the NFC tag
 
 """
+from __future__ import print_function
 
 import time,sys
 
@@ -33,7 +34,7 @@ def readNFCData(addr,length):
     """
     global NFCBuffer
     if addr<0 or addr+length>len(NFCBuffer):
-        print "Trying to read NFC tag outside data area"
+        print("Trying to read NFC tag outside data area")
         raise IOError
     return NFCBuffer[addr:(addr+length)]
 
@@ -48,7 +49,7 @@ def writeNFCData(addr,data):
                 Array of bytes to write
     """
     if addr<0 or addr+len(data)>len(NFCBuffer):
-        print "Trying to write NFC tag outside data area"
+        print("Trying to write NFC tag outside data area")
         raise IOError
     for byte in data:
         NFCBuffer[addr]=byte

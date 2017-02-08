@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 import grovepi
 
 import Tkinter as tk
-import propgrid
+from . import propgrid
 
 
 class GroveLED:
@@ -48,5 +49,5 @@ class GroveLED:
         return {"r":self.colour[0],"g":self.colour[1],"b":self.colour[2]}
         
     def loadConfig(self,conf):
-        if conf.has_key("r") and conf.has_key("g") and conf.has_key("b"):
+        if "r" in conf and "g" in conf and "b" in conf:
             self.colour=(conf["r"],conf["g"],conf["b"])

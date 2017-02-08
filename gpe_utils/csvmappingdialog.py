@@ -67,7 +67,7 @@ class CSVMappingDlg(tksd.Dialog):
                             component=tuple(component)
                         if component=="TIME" and self.needsTime:
                             self.timeComboVar.set(col)
-                        elif sensorCombo.has_key(component):
+                        elif component in sensorCombo:
                             sensorCombo[component].set(col)
         if self.needsTime:
             return self.timeCombo
@@ -91,7 +91,7 @@ class CSVMappingDlg(tksd.Dialog):
         for combo,data in self.combos:
             value=combo.get()
             if len(value)>0:
-                if self.mapping.has_key(value):
+                if value in self.mapping:
                     self.mapping[value].append(data)
                 else:
                     self.mapping[value]=[data]

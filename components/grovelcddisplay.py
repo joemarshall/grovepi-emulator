@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 import grovelcd
 
 
 import Tkinter as tk
-import propgrid
+from . import propgrid
 
 
 class GroveLCDDisplay:

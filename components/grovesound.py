@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import grovepi
-from genericanalog import *
+from .genericanalog import *
 
 class GroveSound(GenericAnalog):
     

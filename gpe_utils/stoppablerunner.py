@@ -1,3 +1,4 @@
+from __future__ import print_function
 import bdb
 import os    
 import sys,threading
@@ -20,7 +21,7 @@ class _ThreadPrinter:
             self.saveThreads[id]=open(filename,"w",buffering=0)
         
     def remove(self,id):
-        if self.saveThreads.has_key(id):
+        if id in self.saveThreads:
             del self.saveThreads[id]
             
 _prt = _ThreadPrinter()
@@ -73,14 +74,14 @@ if __name__=="__main__":
 
     import time
     time.sleep(2)
-    print "yay"
+    print("yay")
     a.stop()
-    print "woo\nwoo"
+    print("woo\nwoo")
     time.sleep(1)
-    print "second try"
+    print("second try")
     a=StoppableRunner("test.py")
     time.sleep(2)
     a.stop()
     while True:
-        print a.running()
+        print(a.running())
         time.sleep(1)

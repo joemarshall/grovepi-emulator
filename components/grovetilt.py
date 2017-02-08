@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 import grovepi
 
-import propgrid
+from . import propgrid
 
-from genericdigital import *
+from .genericdigital import *
 
 
 class GroveTilt(GenericDigital):

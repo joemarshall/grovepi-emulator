@@ -1,3 +1,4 @@
+from __future__ import print_function
 import csv
 import grovepi
 import time
@@ -42,7 +43,7 @@ class CSVPlayer:
         
     def setReplayTime(self,theTime):
         theTime+=self.startTime
-        print theTime
+        print(theTime)
         if self.timeColumn!=None and len(self.assignments)>0:
             while theTime>self.allLines[self.curPos][self.timeColumn] and self.curPos<(len(self.allLines)-1):
                 self.curPos+=1
@@ -90,7 +91,7 @@ class CSVPlayer:
     
     def onTimerFired(self):
         timeSinceStart=time.time()-self.playStartRealTime
-        print "curpos",self.curPos
+        print("curpos",self.curPos)
         for (key,targets) in self.assignments.iteritems():
             for target in targets:
                 if type(target)!=tuple:

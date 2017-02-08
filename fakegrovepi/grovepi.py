@@ -1,3 +1,4 @@
+from __future__ import print_function
 import threading
 import math
 
@@ -17,21 +18,21 @@ def digitalWrite(pin, value):
   
 def analogWrite(pin,value):
     if pinModes[pin]=="INPUT":
-        print "Error, trying to analog write to pin set as INPUT"
+        print("Error, trying to analog write to pin set as INPUT")
     if pin!=3 and pin!=5 and pin!=6:
-        print "Can't analog write on pins other than 3,5 or 6"
+        print("Can't analog write on pins other than 3,5 or 6")
     else:
         outValues[pin]=value
   
 def digitalRead(pin):
   if pinModes[pin]=="INPUT":  
     if digValues[pin]>1:
-        print "Error, trying to digital read from ultrasonic transducer"
+        print("Error, trying to digital read from ultrasonic transducer")
         return 0
     return digValues[pin]
   else:
-    print "Error, trying to read from pin set to output: %d"%pin
-    print "Pinmodes:",pinModes
+    print("Error, trying to read from pin set to output: %d"%pin)
+    print("Pinmodes:",pinModes)
     return 0
 
 def analogRead(pin):
@@ -39,7 +40,7 @@ def analogRead(pin):
 
 def ultrasonicRead(pin):
     if digValues[pin]<=1:
-        print "Error, trying to ultrasonic read from normal digital sensor"
+        print("Error, trying to ultrasonic read from normal digital sensor")
         return 0
     return digValues[pin]-2
   

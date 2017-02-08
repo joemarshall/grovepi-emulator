@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 import grovepi
 
 import Tkinter as tk
 
-import propgrid
+from . import propgrid
 
 class GenericDigital:
     
@@ -53,6 +54,6 @@ class GenericDigital:
         return {"pullup":self.needsPullup}
         
     def loadConfig(self,conf):
-        if conf.has_key("pullup"):
+        if "pullup" in conf:
             self.needsPullup=conf["pullup"]
                 

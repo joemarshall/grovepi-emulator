@@ -1,10 +1,12 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import subprocess
 import tempfile
 import os
 import time
 import threading
 import sys
-from stoppablerunner import StoppableRunner
+from .stoppablerunner import StoppableRunner
 
 _SSH_KEY=os.path.join(os.path.dirname(os.path.abspath(__file__ )),"pikeys","openssh.key")
 _PUTTY_KEY=os.path.join(os.path.dirname(os.path.abspath(__file__ )),"pikeys","putty.ppk")
@@ -67,7 +69,7 @@ class RemoteRunner:
     def _executeRemote(self,codeName):
         #        codeFile=_ReadableTempFile(pythonCode)
         #        codeName=codeFile.name
-        print "---------------- REMOTE LAUNCH OF PYTHON ON RASPBERRY Pi ----------------"
+        print("---------------- REMOTE LAUNCH OF PYTHON ON RASPBERRY Pi ----------------")
         if self.captureFile!=None:
             print ("Running %s at %s - capture to %s"%(codeName,self.address,self.captureFile))
         else:
@@ -91,12 +93,12 @@ class RemoteRunner:
         retVal=subprocess.call(cmdCopy)
            
         if retVal==0:
-            print "-------------------------------- LAUNCHING -------------------------------"
+            print("-------------------------------- LAUNCHING -------------------------------")
             if self.captureFile!=None:
                 logFile=open(self.captureFile,"wb",buffering=1)
                 self.process = subprocess.Popen(cmdRun, universal_newlines=True,stdin=open(os.devnull),stdout=subprocess.PIPE,bufsize=1)
                 for line in iter(self.process.stdout.readline,''):
-                    print line,                    
+                    print(line, end=' ')                    
                     logFile.write(line)
                     logFile.flush()
          
@@ -135,6 +137,6 @@ for c in range(0,50000):
         while r.running():
             time.sleep(0.1)
     except KeyboardInterrupt:
-        print "interrupted"
+        print("interrupted")
         r.stop()
 

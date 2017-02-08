@@ -1,3 +1,4 @@
+from __future__ import print_function
 import grovepi
 import time
 import os
@@ -81,7 +82,7 @@ class ServerPlayer:
                         t.setValue(channel,values[key])
             self.timestamp=values['timestamp']
         except IOError:
-            print "URL open failed"
+            print("URL open failed")
         if self.timerFrame!=None:
             self.timerID=self.timerFrame.after(self.updateRate,self.onTimerFired)
 

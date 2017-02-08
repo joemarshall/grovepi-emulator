@@ -1,3 +1,4 @@
+from __future__ import print_function
 import Tkinter as tk
 import tkColorChooser as tkcc
 
@@ -140,7 +141,7 @@ class ColourProperty:
     def _ChooseColour(self):
         newColour=tkcc.askcolor(initialcolor=self.value)
         if newColour!=None and newColour[0]!=None:
-            print newColour
+            print(newColour)
             self.value=newColour[0]
             self.rowParent.OnPropertyChange(self,self.value)
        
