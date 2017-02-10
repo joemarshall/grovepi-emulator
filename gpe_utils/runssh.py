@@ -81,6 +81,7 @@ class RemoteRunner:
             print ("Running %s at %s"%(codeName,self.address))
         print("Copying python script to remote address")
         
+        cmdCopyBack=None
         if os.name=="nt":
             # on windows we use plink and pscp to copy and run
             cmdCopy=_PUTTY_DIR+ os.sep+"pscp -i %s %s %s:%s"%(_PUTTY_KEY,codeName,self.address,os.path.basename(codeName))
@@ -93,10 +94,20 @@ class RemoteRunner:
             if host_key!=None:
                 host_key_str="-hostkey %s"%host_key
             cmdCopy=_PUTTY_DIR+ os.sep+"pscp -i %s %s %s %s:%s"%(_PUTTY_KEY,host_key_str,codeName,self.address,os.path.basename(codeName))
-            cmdRun=_PUTTY_DIR+ os.sep+'plink -i %s %s %s -t "python %s"'%(_PUTTY_KEY,host_key_str   ,self.address,os.path.basename(codeName))
+            if self.captureFile:
+                cmdRun=_PUTTY_DIR+ os.sep+'plink -i %s %s %s -t "stdbuf -o 0 python %s |tee %s"'%(_PUTTY_KEY,host_key_str   ,self.address,os.path.basename(codeName),os.path.basename(self.captureFile))
+                cmdCopyBack=_PUTTY_DIR+ os.sep+"pscp -i %s %s %s:%s %s"%(_PUTTY_KEY,host_key_str,self.address,os.path.basename(self.captureFile),self.captureFile)
+            else:
+                cmdRun=_PUTTY_DIR+ os.sep+'plink -i %s %s %s -t "python %s"'%(_PUTTY_KEY,host_key_str   ,self.address,os.path.basename(codeName))
+                
         else:
             cmdCopy=["scp","-i",_SSH_KEY,"-o","UserKnownHostsFile=/dev/null","-o","StrictHostKeyChecking=no",codeName,self.address+":"+os.path.basename(codeName)]
-            cmdRun=["ssh","-i",_SSH_KEY,self.address,"-o","UserKnownHostsFile=/dev/null","-o","StrictHostKeyChecking=no",'python',os.path.basename(codeName)]
+            if self.captureFile:
+                cmdRun=["ssh","-i",_SSH_KEY,self.address,"-o","UserKnownHostsFile=/dev/null","-o","StrictHostKeyChecking=no","stdbuf -o 0 python %s | tee %s"%(os.path.basename(codeName),os.path.basename(self.captureFile))]
+                cmdCopyBack=["scp","-i",_SSH_KEY,"-o","UserKnownHostsFile=/dev/null","-o","StrictHostKeyChecking=no",self.address+":"+os.path.basename(self.captureFile),self.captureFile]
+            else:
+                cmdRun=["ssh","-i",_SSH_KEY,self.address,"-o","UserKnownHostsFile=/dev/null","-o","StrictHostKeyChecking=no","python %s "%os.path.basename(codeName)]
+                
             # fix key permission for openssh or else it will fail to run
             subprocess.call("chmod 600 test.key")
         retVal=subprocess.call(cmdCopy)
@@ -104,15 +115,20 @@ class RemoteRunner:
         if retVal==0:
             print("-------------------------------- LAUNCHING -------------------------------")
             if self.captureFile!=None:
-                logFile=open(self.captureFile,"wb",buffering=0)
-                self.process = subprocess.Popen(cmdRun, universal_newlines=True,stdin=open(os.devnull),stdout=subprocess.PIPE,bufsize=1)
-                for line in iter(self.process.stdout.readline,''):
-                    print(line, end=' ')                    
-                    logFile.write(line.encode("ASCII"))
-                    logFile.flush()
-         
-                logFile.close()
+                self.process = subprocess.Popen(cmdRun,bufsize=1)
+#                self.process = subprocess.Popen(cmdRun, universal_newlines=True,stdin=open(os.devnull),stdout=None,bufsize=1)
                 self.return_code = self.process.wait()
+                retVal=subprocess.call(cmdCopyBack)
+                
+#                logFile=open(self.captureFile,"wb",buffering=0)
+#                self.process = subprocess.Popen(cmdRun, universal_newlines=True,stdin=open(os.devnull),stdout=subprocess.PIPE,bufsize=1)
+#                for line in iter(self.process.stdout.readline,''):
+#                    print(line, end=' ')                    
+#                    logFile.write(line.encode("ASCII"))
+#                    logFile.flush()
+#         
+#                logFile.close()
+#                self.return_code = self.process.wait()
             else:
                 self.process = subprocess.Popen(cmdRun,bufsize=0)
 #                self.process = subprocess.Popen(cmdRun, universal_newlines=True,stdin=open(os.devnull),stdout=None,bufsize=1)
