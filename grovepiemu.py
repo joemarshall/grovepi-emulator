@@ -207,7 +207,7 @@ class Frame(tk.Frame):
             root.bind("<Button-2>", self.OnContextMenu)
         else:
             root.bind("<Button-3>", self.OnContextMenu)
-		
+        
         self.player=None
         self.scriptPath=None
         self.scriptRunner=None
@@ -549,10 +549,10 @@ Currently has support for the following sensors:
                 else:
                     self.OnUnloadCSV()
                 self.remoteScript=allConfig["remoteScript"]
-				if fromIni:
-					self.remoteAddress=None
-				else:
-					self.remoteAddress=allConfig["remoteAddress"]
+                if fromIni:
+                    self.remoteAddress=None
+                else:
+                    self.remoteAddress=allConfig["remoteAddress"]
                 self.OnLoadPY(reloadCurrent=True,start=False)
 
  #               if fromIni:
