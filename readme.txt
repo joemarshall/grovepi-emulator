@@ -1,9 +1,9 @@
-GrovePi Emulation Environment 1.0
+GrovePi Emulation Environment 2.0
 ---------------------------------
 This runs python scripts in an emulation environment that 
 pretends to be a Raspberry PI with a Grove sensor board 
-attached. I mainly created this for use during the G54UBI
-Ubiquitous Computing course at University of Nottingham.
+attached. I mainly created this for use during the G54MRT
+Mixed Reality Technologies course at University of Nottingham.
 
 As such I've only implemented components that were in our
 box of tricks. If you want new components integrating, it 
@@ -28,8 +28,6 @@ presses. The other is to send them as 'seconds since last press'
 and round them down. When choosing your column mapping in the program
 you can select -TIME_SINCE_PRESSED versions of each column for this.
 
-The JSON code is flaky and runs network code in the UI thread, but works
-okay as long as your server is live.
 
 See here for details of the GrovePI board.
 http://www.dexterindustries.com/grovepi/
@@ -41,8 +39,9 @@ This is public domain code, written by Joe Marshall 2015.
 joe.marshall@nottingham.ac.uk
 
 To run the emulator, just extract all these files, go to the folder
-and run grovepiemu.py
+and run either startemulatorwin.bat (Windows) or grovepiemu.py (other platforms)
 
 You need python 2.7. Should work on 32 or 64 bit Windows, I see no reason it shouldn't work on Mac or Linux.
+
 
 

@@ -513,7 +513,7 @@ Currently has support for the following sensors:
         for c in components.allSensors:
             description+=c.classDescription()+"\n"
         description+="\nBy Joe Marshall\nhttp://www.cs.nott.ac.uk/~pszjm2\n\nDo what you want with the code. Any questions, email joe.marshall@nottingham.ac.uk "
-        tkm.showinfo("Grove PI Emulation Environment 1.2",message=description)
+        tkm.showinfo("Grove PI Emulation Environment 2.0",message=description)
 
     
     def loadSettingsIni(self,name,fromIni=False):
@@ -549,7 +549,10 @@ Currently has support for the following sensors:
                 else:
                     self.OnUnloadCSV()
                 self.remoteScript=allConfig["remoteScript"]
-                self.remoteAddress=allConfig["remoteAddress"]
+				if fromIni:
+					self.remoteAddress=None
+				else:
+					self.remoteAddress=allConfig["remoteAddress"]
                 self.OnLoadPY(reloadCurrent=True,start=False)
 
  #               if fromIni:
