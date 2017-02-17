@@ -66,6 +66,17 @@ class RemoteRunner:
                 popen.terminate()
                 splitLine=line.split(" ")
                 return splitLine[-1].strip("\n")
+        sleeps=10
+        while (not popen.poll()) and sleeps>0:
+            time.sleep(0.5)
+            sleeps-=1
+        if sleeps==0 or popen.returncode!=0:
+            print ("failed to load host key - do you have the correct IP address")
+            try:
+                popen.terminate()
+            except OSError:
+                None            
+            return "FAIL"
         return None
 
     def _runThread(self,name):
@@ -89,6 +100,8 @@ class RemoteRunner:
                 host_key=_HOST_KEY_CACHE[self.address]
             else:
                 host_key=self._bypassPuttyHostAuth(cmdCopy)
+                if host_key=="FAIL":
+                    return
                 _HOST_KEY_CACHE[self.address]=host_key
             host_key_str=""
             if host_key!=None:

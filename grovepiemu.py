@@ -548,10 +548,11 @@ Currently has support for the following sensors:
                         self.OnLoadCSV(True)
                 else:
                     self.OnUnloadCSV()
-                self.remoteScript=allConfig["remoteScript"]
                 if fromIni:
                     self.remoteAddress=None
+                    self.remoteScript=False
                 else:
+                    self.remoteScript=allConfig["remoteScript"]
                     self.remoteAddress=allConfig["remoteAddress"]
                 self.OnLoadPY(reloadCurrent=True,start=False)
 
