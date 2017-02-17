@@ -38,7 +38,7 @@ class GrovePIR(GroveButton):
 
 
     def onComponentDestroy(self):
-        self.timer.Stop()
+        None
 
     def getCSVCode(self):
         return {"imports":["grovepi"],"reader":"grovepi.digitalRead(%d)"%self.pin,"variable":"pir%d"%self.pin}
