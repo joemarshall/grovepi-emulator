@@ -2,7 +2,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 import subprocess
 import tempfile
-import os
+import os, stat
 import time
 import threading
 import sys
@@ -109,7 +109,8 @@ class RemoteRunner:
                 cmdRun=["ssh","-i",_SSH_KEY,self.address,"-o","UserKnownHostsFile=/dev/null","-o","StrictHostKeyChecking=no","python %s "%os.path.basename(codeName)]
                 
             # fix key permission for openssh or else it will fail to run
-            subprocess.call("chmod 600 test.key")
+            os.chmod(_SSH_KEY, stat.S_IREAD)
+			
         retVal=subprocess.call(cmdCopy)
            
         if retVal==0:

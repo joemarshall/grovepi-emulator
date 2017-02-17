@@ -203,8 +203,11 @@ class Frame(tk.Frame):
         self.setAddressButton.grid()
         scriptBox.grid(row=7,column=1)
         
-        root.bind("<Button-3>", self.OnContextMenu)       
-               
+        if sys.platform == "darwin": 
+            root.bind("<Button-2>", self.OnContextMenu)
+        else:
+            root.bind("<Button-3>", self.OnContextMenu)
+		
         self.player=None
         self.scriptPath=None
         self.scriptRunner=None
