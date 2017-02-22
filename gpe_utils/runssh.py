@@ -60,6 +60,7 @@ class RemoteRunner:
         popen = subprocess.Popen(cmdCopy, universal_newlines=True,stdin=open(os.devnull),stdout=open(os.devnull),stderr=subprocess.PIPE,bufsize=1)
         HOST_ERROR_STR="ssh-rsa "
         for line in popen.stderr:
+            print (line)
             errPos=line.find(HOST_ERROR_STR)
             if errPos>=0:
                 popen.stderr.close()
@@ -67,9 +68,10 @@ class RemoteRunner:
                 splitLine=line.split(" ")
                 return splitLine[-1].strip("\n")
         sleeps=10
-        while (not popen.poll()) and sleeps>0:
+        while (not popen.poll()) and sleeps>0 and popen.returncode==None:
             time.sleep(0.5)
             sleeps-=1
+        #print (popen.returncode)
         if sleeps==0 or popen.returncode!=0:
             print ("failed to load host key - do you have the correct IP address")
             try:
@@ -95,7 +97,8 @@ class RemoteRunner:
         cmdCopyBack=None
         if os.name=="nt":
             # on windows we use plink and pscp to copy and run
-            cmdCopy=_PUTTY_DIR+ os.sep+"pscp -i %s %s %s:%s"%(_PUTTY_KEY,codeName,self.address,os.path.basename(codeName))
+            cmdCopy=_PUTTY_DIR+ os.sep+"pscp -i \"%s\" \"%s\" %s:%s"%(_PUTTY_KEY,codeName,self.address,os.path.basename(codeName))
+            print (cmdCopy)
             if self.address in _HOST_KEY_CACHE:
                 host_key=_HOST_KEY_CACHE[self.address]
             else:
@@ -106,10 +109,10 @@ class RemoteRunner:
             host_key_str=""
             if host_key!=None:
                 host_key_str="-hostkey %s"%host_key
-            cmdCopy=_PUTTY_DIR+ os.sep+"pscp -i %s %s %s %s:%s"%(_PUTTY_KEY,host_key_str,codeName,self.address,os.path.basename(codeName))
+            cmdCopy=_PUTTY_DIR+ os.sep+"pscp -i \"%s\" %s \"%s\" %s:%s"%(_PUTTY_KEY,host_key_str,codeName,self.address,os.path.basename(codeName))
             if self.captureFile:
                 cmdRun=_PUTTY_DIR+ os.sep+'plink -i %s %s %s -t "stdbuf -o 0 python %s |tee %s"'%(_PUTTY_KEY,host_key_str   ,self.address,os.path.basename(codeName),os.path.basename(self.captureFile))
-                cmdCopyBack=_PUTTY_DIR+ os.sep+"pscp -i %s %s %s:%s %s"%(_PUTTY_KEY,host_key_str,self.address,os.path.basename(self.captureFile),self.captureFile)
+                cmdCopyBack=_PUTTY_DIR+ os.sep+"pscp -i \"%s\" %s %s:%s \"%s\""%(_PUTTY_KEY,host_key_str,self.address,os.path.basename(self.captureFile),self.captureFile)
             else:
                 cmdRun=_PUTTY_DIR+ os.sep+'plink -i %s %s %s -t "python %s"'%(_PUTTY_KEY,host_key_str   ,self.address,os.path.basename(codeName))
                 
