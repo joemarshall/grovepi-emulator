@@ -28,7 +28,7 @@ def generatePython(components):
                 types.append(curType)
             if "readall" in csvCodes:
                 readers.append(csvCodes["readall"])
-                if types in csvCodes:
+                if "types" in csvCodes:
                     types.extend(csvCodes["types"])
                 else:
                     for c in range(len(csvCodes["readall"])):
