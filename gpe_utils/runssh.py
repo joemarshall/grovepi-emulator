@@ -111,10 +111,10 @@ class RemoteRunner:
                 host_key_str="-hostkey %s"%host_key
             cmdCopy=_PUTTY_DIR+ os.sep+"pscp -i \"%s\" %s \"%s\" %s:%s"%(_PUTTY_KEY,host_key_str,codeName,self.address,os.path.basename(codeName))
             if self.captureFile:
-                cmdRun=_PUTTY_DIR+ os.sep+'plink -i %s %s %s -t "stdbuf -o 0 python %s |tee %s"'%(_PUTTY_KEY,host_key_str   ,self.address,os.path.basename(codeName),os.path.basename(self.captureFile))
+                cmdRun=_PUTTY_DIR+ os.sep+'plink -i \"%s\" %s %s -t "stdbuf -o 0 python %s |tee %s"'%(_PUTTY_KEY,host_key_str   ,self.address,os.path.basename(codeName),os.path.basename(self.captureFile))
                 cmdCopyBack=_PUTTY_DIR+ os.sep+"pscp -i \"%s\" %s %s:%s \"%s\""%(_PUTTY_KEY,host_key_str,self.address,os.path.basename(self.captureFile),self.captureFile)
             else:
-                cmdRun=_PUTTY_DIR+ os.sep+'plink -i %s %s %s -t "python %s"'%(_PUTTY_KEY,host_key_str   ,self.address,os.path.basename(codeName))
+                cmdRun=_PUTTY_DIR+ os.sep+'plink -i \"%s\" %s %s -t "python %s"'%(_PUTTY_KEY,host_key_str   ,self.address,os.path.basename(codeName))
                 
         else:
             cmdCopy=["scp","-i",_SSH_KEY,"-o","UserKnownHostsFile=/dev/null","-o","StrictHostKeyChecking=no",codeName,self.address+":"+os.path.basename(codeName)]
