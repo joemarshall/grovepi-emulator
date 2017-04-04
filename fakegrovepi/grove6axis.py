@@ -58,18 +58,24 @@ def getRotationMatrix(mag=None,accel=None):
     Mz = Ax*Hy - Ay*Hx;
     return ((Hx,Hy,Hz),(Mx,My,Mz),(Ax,Ay,Az))
     
-def getOrientation(matrix=None):
+def getOrientation(matrix=None,errorValue=(0,0,0)):
     """ Get orientation values (Yaw, pitch, roll) from rotation matrix
     
     Args: 
         matrix: Rotation matrix, from getRotationMatrix(mag,accel)
                 if Matrix is None, then it will call the relevant getAccel functions itself
+                
+        errorValue: If the rotation matrix can't be found (if it is in freefall, this value is returned. 
+                    By default this is set to be just a zero value, if you want to distinguish error events
+                    then set this to some other value (e.g. None)
         
     Returns:
         (yaw, pitch, roll) tuple
     """
     if matrix==None:
         matrix=getRotationMatrix()
+    if matrix==None:
+        return errorValue
     yaw=atan2(matrix[0][1], matrix[1][1])
     pitch=asin(-matrix[2][1])
     roll=atan2(-matrix[2][0], matrix[2][2])
