@@ -31,6 +31,6 @@ class GroveLCDDisplay:
         colour=grovelcd.curRGB
         line1="".join(text[0:16])
         line2="".join(text[16:32])
-        thisColour=(128+colour[0]*0.5,128+colour[1]*0.5,128+colour[2]*0.5)
+        thisColour=(int(128+colour[0]*0.5),int(128+colour[1]*0.5),int(128+colour[2]*0.5))
         self.label.config(bg="#%02x%02x%02x"%thisColour)
         self.label.config(text="%s\n%s"%(line1,line2))
