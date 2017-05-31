@@ -58,5 +58,5 @@ class GenericDigital:
             self.needsPullup=conf["pullup"]
 
     def getCSVCode(self):
-        return {"imports":["grovepi"],"reader":"digitalRead(%d)"%self.pin,"variable":"digital%d"%self.pin}
+        return {"imports":["grovepi"],"reader":"grovepi.digitalRead(%d)"%self.pin,"variable":"digital%d"%self.pin}
             

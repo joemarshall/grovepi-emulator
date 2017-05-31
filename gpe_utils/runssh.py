@@ -97,7 +97,7 @@ class RemoteRunner:
         cmdCopyBack=None
         if os.name=="nt":
             # on windows we use plink and pscp to copy and run
-            cmdCopy=_PUTTY_DIR+ os.sep+"pscp -i \"%s\" \"%s\" %s:%s"%(_PUTTY_KEY,codeName,self.address,os.path.basename(codeName))
+            cmdCopy=_PUTTY_DIR+ os.sep+"pscp -i \"%s\" \"%s\" \"%s:%s\""%(_PUTTY_KEY,codeName,self.address,os.path.basename(codeName))
             print (cmdCopy)
             if self.address in _HOST_KEY_CACHE:
                 host_key=_HOST_KEY_CACHE[self.address]
@@ -109,7 +109,7 @@ class RemoteRunner:
             host_key_str=""
             if host_key!=None:
                 host_key_str="-hostkey %s"%host_key
-            cmdCopy=_PUTTY_DIR+ os.sep+"pscp -i \"%s\" %s \"%s\" %s:%s"%(_PUTTY_KEY,host_key_str,codeName,self.address,os.path.basename(codeName))
+            cmdCopy=_PUTTY_DIR+ os.sep+"pscp -i \"%s\" %s \"%s\" \"%s:%s\""%(_PUTTY_KEY,host_key_str,codeName,self.address,os.path.basename(codeName))
             if self.captureFile:
                 cmdRun=_PUTTY_DIR+ os.sep+'plink -i \"%s\" %s %s -t "stdbuf -o 0 python %s |tee %s"'%(_PUTTY_KEY,host_key_str   ,self.address,os.path.basename(codeName),os.path.basename(self.captureFile))
                 cmdCopyBack=_PUTTY_DIR+ os.sep+"pscp -i \"%s\" %s %s:%s \"%s\""%(_PUTTY_KEY,host_key_str,self.address,os.path.basename(self.captureFile),self.captureFile)
