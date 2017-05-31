@@ -25,6 +25,7 @@ def analogWrite(pin,value):
         outValues[pin]=value
   
 def digitalRead(pin):
+  time.sleep(0.00102427601814)
   if pinModes[pin]=="INPUT":  
     if digValues[pin]>1:
         print("Error, trying to digital read from ultrasonic transducer")
@@ -36,9 +37,11 @@ def digitalRead(pin):
     return 0
 
 def analogRead(pin):
+  time.sleep(0.00445848107338)
   return anaValues[pin]
 
 def ultrasonicRead(pin):
+    time.sleep(0.0646700310707)
     if digValues[pin]<=1:
         print("Error, trying to ultrasonic read from normal digital sensor")
         return 0

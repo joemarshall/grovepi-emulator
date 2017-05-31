@@ -6,12 +6,14 @@ accVals=[0,0,0]
 def getAccel():
     """Get accelerometer values (in multiples of g)        
     """
+    time.sleep(0.0054553399086) # simulate sensor delay
     return tuple(accVals)
 
 
 def getMag():
     """Get magnetometer values. 
     """
+    time.sleep(0.00540907430649) # simulate sensor delay
     return tuple(magVals)
 
 
