@@ -1,4 +1,5 @@
 from math import *
+import time
 
 magVals=[0,0,0]
 accVals=[0,0,0]

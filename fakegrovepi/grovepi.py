@@ -1,6 +1,7 @@
 from __future__ import print_function
 import threading
 import math
+import time
 
 digValues={}# digital input values (or 2 ---> 300 for ultrasonic distances)
 anaValues={} 
