@@ -6,9 +6,18 @@ from __future__ import print_function
 
 import os    
 import sys
-# this line I think makes it so that any loaded python files will get their grovepi from the right place where the fake grovepi bits live  
-# in preference to any that happen to be in the same directory as them
-sys.path=[os.path.join(os.path.abspath(os.path.dirname(__file__)),"fakegrovepi")]+sys.path
+
+
+if getattr( sys, 'frozen', False ) :
+        # running in an installer bundle
+    _mainPath=sys._MEIPASS
+        
+else :
+        _mainPath=os.path.dirname(__file__)
+        # running live
+        # this line I think makes it so that any loaded python files will get their grovepi from the right place where the fake grovepi bits live  
+        # in preference to any that happen to be in the same directory as them
+        sys.path=[os.path.join(os.path.abspath(os.path.dirname(__file__)),"fakegrovepi")]+sys.path
 
 import gpe_utils
 from gpe_utils.tkimports import *
@@ -24,7 +33,7 @@ I2CPINS=[1,2,3]
 class AllPropertyFrame(tk.Toplevel):
     def __init__(self,parent):
         tk.Toplevel.__init__(self)
-        self.iconbitmap("main.ico")
+        self.iconbitmap(os.path.join(_mainPath,"main.ico"))
         self.title("Properties")
         self.componentSizers={}
         
@@ -223,7 +232,7 @@ class Frame(tk.Frame):
             if self.settingsFile!=None:
                self.root.wm_title("GrovePi Emulator - %s"%self.settingsFile)
         else:
-            self.loadSettingsIni(os.path.join(os.path.dirname(__file__),"grovepiemu.ini"),True)
+            self.loadSettingsIni(os.path.join(_mainPath,"grovepiemu.ini"),True)
         self.root.after(50,self.update)
         
     def OnWritePython(self):
@@ -244,7 +253,7 @@ class Frame(tk.Frame):
 
         
     def OnSetRemote(self):
-        oldAddress="ubi@"
+        oldAddress="g54mrt@"
         if self.remoteAddress!=None:
             oldAddress=self.remoteAddress
         newAddress= tksd.askstring(parent=self.root,prompt="Enter the username and host of the Raspberry Pi to run the script on\nin the format: username@192.168.1.1",title="Run script remotely",initialvalue=oldAddress)
@@ -736,12 +745,14 @@ Currently has support for the following sensors:
     def OnClose(self,event=None):
         if self.scriptRunner!=None and self.scriptRunner.running():
             self.scriptRunner.stop()
-        self.saveSettingsIni(os.path.join(os.path.dirname(__file__),"grovepiemu.ini"))
+        self.saveSettingsIni(os.path.join(_mainPath,"grovepiemu.ini"))
         self.root.quit()
 
-    
+
+
+        
 root =tk.Tk()                             #main window
-root.iconbitmap("main.ico")
+root.iconbitmap(os.path.join(_mainPath,"main.ico"))
 top = Frame(root,"GrovePi Emulator - <untitled>")
 #top.Show()
 

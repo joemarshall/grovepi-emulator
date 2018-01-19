@@ -8,9 +8,17 @@ import threading
 import sys
 from .stoppablerunner import StoppableRunner
 
-_SSH_KEY=os.path.join(os.path.dirname(os.path.abspath(__file__ )),"pikeys","openssh.key")
-_PUTTY_KEY=os.path.join(os.path.dirname(os.path.abspath(__file__ )),"pikeys","putty.ppk")
-_PUTTY_DIR=os.path.join(os.path.dirname(os.path.abspath(__file__ )),"pikeys")
+if getattr( sys, 'frozen', False ) :
+        # running in an installer bundle
+    _mainPath=sys._MEIPASS
+        
+else :
+    _mainPath=os.path.dirname(__file__)
+
+
+_SSH_KEY=os.path.join(_mainPath,"pikeys","openssh.key")
+_PUTTY_KEY=os.path.join(_mainPath,"pikeys","putty.ppk")
+_PUTTY_DIR=os.path.join(_mainPath,"pikeys")
 
 
 class _ReadableTempFile:
