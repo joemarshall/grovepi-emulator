@@ -4,6 +4,9 @@ import time
 magVals=[0,0,0]
 accVals=[0,0,0]
 
+def init6Axis():
+    pass
+
 def getAccel():
     """Get accelerometer values (in multiples of g)        
     """
