@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 # Todo: RFID module, RFID tag module
 #
 # 
@@ -244,7 +244,7 @@ class Frame(tk.Frame):
         filename=tkfd.asksaveasfilename(**options)
         if not filename:
             return
-        pythonText=gpe_utils.generatePython(self.componentList.values())
+        pythonText=gpe_utils.generatePython(list(self.componentList.values()))
         file=open(filename,"wb")
         file.write(pythonText.encode("ASCII"))
         file.close()
@@ -407,7 +407,7 @@ class Frame(tk.Frame):
             self.OnMapCSV(reloadCurrent=reloadCurrent)
 
     def findComponentByName(self,name):
-        for c in self.componentList.values():
+        for c in list(self.componentList.values()):
             if c.title()==name:
                 return c
         return None
@@ -416,14 +416,14 @@ class Frame(tk.Frame):
         if self.player==None:
             return
         if not reloadCurrent:        
-            mapdlg=gpe_utils.CSVMappingDlg(self.root,self.player.getFieldNames(),self.componentList.values(),self.lastAssignments,isinstance(self.player,gpe_utils.CSVPlayer))
+            mapdlg=gpe_utils.CSVMappingDlg(self.root,self.player.getFieldNames(),list(self.componentList.values()),self.lastAssignments,isinstance(self.player,gpe_utils.CSVPlayer))
             assignments=mapdlg.getAssignments()
             if assignments==None:
                 return
             self.lastAssignments=assignments
         assignmentsFixed={}
         timeColumn=None
-        for (col,dests) in self.lastAssignments.items():
+        for (col,dests) in list(self.lastAssignments.items()):
             assignmentsFixed[col]=[]
             for dest in dests:
                 if type(dest)==tuple or type(dest)==list:
@@ -473,7 +473,7 @@ class Frame(tk.Frame):
 
     def OnNew(self,event=None):
         removals=[]
-        for (pin,type) in self.componentList.keys():
+        for (pin,type) in list(self.componentList.keys()):
             removals.append((pin,type))
         for (pin,type) in removals:
             self.removeComponent(pin,type)
@@ -522,7 +522,7 @@ Currently has support for the following sensors:
         for c in components.allSensors:
             description+=c.classDescription()+"\n"
         description+="\nBy Joe Marshall\nhttp://www.cs.nott.ac.uk/~pszjm2\n\nDo what you want with the code. Any questions, email joe.marshall@nottingham.ac.uk "
-        tkm.showinfo("Grove PI Emulation Environment 2.0",message=description)
+        tkm.showinfo("Grove PI Emulation Environment 3.0",message=description)
 
     
     def loadSettingsIni(self,name,fromIni=False):
@@ -535,7 +535,7 @@ Currently has support for the following sensors:
             with open(name,'r') as file:
                 allConfig=json.load(file)
                 modules=allConfig["modules"]
-                for (pinType,(moduleName,config)) in modules.items():
+                for (pinType,(moduleName,config)) in list(modules.items()):
                     thisComponent=None
                     for sensorClass in components.allSensors:
                         if sensorClass.classDescription()==moduleName:
@@ -595,7 +595,7 @@ Currently has support for the following sensors:
         try:
             allConfig={}
             modules={}
-            for (pin,type),component in self.componentList.items():
+            for (pin,type),component in list(self.componentList.items()):
                 modConfig=None
                 if hasattr(component,"saveConfig"):
                     modConfig=component.saveConfig()
@@ -625,7 +625,7 @@ Currently has support for the following sensors:
         
     def OnContextMenu(self,event):
         x,y=event.x_root,event.y_root
-        for (pin,type),sizer in self.containerSizers.items():
+        for (pin,type),sizer in list(self.containerSizers.items()):
             wx=sizer.winfo_rootx()
             wy=sizer.winfo_rooty()
             ww=sizer.winfo_width()
@@ -696,7 +696,7 @@ Currently has support for the following sensors:
         
             
     def update(self):
-        for component in self.componentList.values():
+        for component in list(self.componentList.values()):
             if hasattr(component,"update"):
                 component.update()
         if self.player!=None:
