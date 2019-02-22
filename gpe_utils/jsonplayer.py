@@ -2,10 +2,7 @@ import grovepi
 import time
 import os
 import sys
-if sys.version_info.major<3:
-    import urllib2 as url
-else: 
-    import urllib.request as url
+import urllib.request as url
 import json
 
 class JSONPlayer:
@@ -14,7 +11,7 @@ class JSONPlayer:
 
         resp=url.urlopen(self.filename,timeout=5)
         values=json.load(resp)
-        self.fields=values.keys()
+        self.fields=list(values.keys())
         temp=[]
         for c in self.fields:
             temp.append("%s-TIME_SINCE_PRESSED"%c)
@@ -71,7 +68,7 @@ class JSONPlayer:
         resp=url.urlopen(self.filename,timeout=1)
         line=json.load(resp)
         values={}
-        for key,val in line.items():
+        for key,val in list(line.items()):
             try:
                 values[key]=float(val)
                 if values[key].is_integer():
@@ -82,7 +79,7 @@ class JSONPlayer:
                     values[key+"-TIME_SINCE_PRESSED"]=0
             except ValueError:
                 None
-        for (key,targets) in self.assignments.items():
+        for (key,targets) in list(self.assignments.items()):
             for target in targets:
                 if type(target)!=tuple:
                     target.setValue(values[key])

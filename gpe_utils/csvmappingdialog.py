@@ -57,7 +57,7 @@ class CSVMappingDlg(tksd.Dialog):
                     sensorCombo[comp.title()]=comboVar
                     
         if self.lastMapping!=None:
-            for (col,components) in self.lastMapping.items():
+            for (col,components) in list(self.lastMapping.items()):
                 if col in self.csvColumns:
                     for component in components:
                         if type(component)==list:

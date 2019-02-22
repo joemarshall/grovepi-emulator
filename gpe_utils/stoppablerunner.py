@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import bdb
 import os    
 import sys,threading
@@ -25,7 +25,7 @@ class _ThreadPrinter:
             
     def flush(self):
         self.originalStdout.flush()
-        for file in self.saveThreads.values():
+        for file in list(self.saveThreads.values()):
             file.flush()
             
 _prt = _ThreadPrinter()

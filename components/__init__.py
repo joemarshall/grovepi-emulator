@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from .genericdigital import *
 from .grovebutton import *
 from .groveled import *
@@ -13,8 +13,9 @@ from .grovetilt import *
 from .grovelcddisplay import *
 from .grove6axisaccel import *
 from .grovenfctagmodule import *
+from .grovedht import *
 
-digitalSensors=[GenericDigital,GroveButton,GrovePIR,GroveUltrasonic,GroveTilt]
+digitalSensors=[GenericDigital,GroveButton,GrovePIR,GroveUltrasonic,GroveTilt,GroveDHT]
 analogSensors=[GenericAnalog,GroveTemperature,GroveLight,GroveSound,GroveLoudness]
 digitalOutputs=[GroveLED]
 i2cConnections=[GroveLCDDisplay,GroveSixAxisAccelerometer,GroveNFCTagModule]

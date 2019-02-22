@@ -1,5 +1,5 @@
-from __future__ import print_function
-from __future__ import absolute_import
+
+
 import subprocess
 import tempfile
 import os, stat
@@ -71,6 +71,7 @@ class RemoteRunner:
             print (line)
             errPos=line.find(HOST_ERROR_STR)
             if errPos>=0:
+                print("Found host:",errPos)
                 popen.stderr.close()
                 popen.terminate()
                 splitLine=line.split(" ")

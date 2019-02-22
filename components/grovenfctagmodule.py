@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 import grovenfctag
 
 from gpe_utils.tkimports import *

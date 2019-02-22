@@ -13,7 +13,7 @@
         print (grovenfctag.readNFCData(0,16)) # display the first 16 bytes of the NFC tag
 
 """
-from __future__ import print_function
+
 
 import time,sys
 

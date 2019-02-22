@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 import grove6axis
 
 from gpe_utils.tkimports import *

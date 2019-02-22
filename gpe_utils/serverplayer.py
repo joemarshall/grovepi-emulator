@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import grovepi
 import time
 import os
@@ -80,7 +80,7 @@ class ServerPlayer:
                     values[key]=int(val)
                 except ValueError:
                     values[key]=float(val)
-            for (key,targets) in self.assignments.items():
+            for (key,targets) in list(self.assignments.items()):
                 for target in targets:
                     if type(target)!=tuple:
                         target.setValue(values[key])

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from .csvmappingdialog import *
 from .csvplayer import *
 from .stoppablerunner import *

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 import grovepi
 
 from gpe_utils.tkimports import *
@@ -33,7 +33,7 @@ class GroveLED:
         self.colour=value
         
     def getColourName(self,rgb):
-        return "#%02x%02x%02x"%rgb
+        return "#%02x%02x%02x"%(int(rgb[0]),int(rgb[1]),int(rgb[2]))
         
     def update(self):
         value=grovepi.outValues[self.pin]

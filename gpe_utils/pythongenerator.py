@@ -22,7 +22,7 @@ def generatePython(components):
                 curType=csvCodes["type"]
             if "reader" in csvCodes:
                 if curVar==None:
-                    print("Missing variable name for component",component)
+                    print(("Missing variable name for component",component))
                 else:
                     readers.append(curVar+"="+csvCodes["reader"])
                 types.append(curType)
@@ -33,7 +33,7 @@ def generatePython(components):
                 else:
                     for c in range(len(csvCodes["readall"])):
                         types.append("%d")
-    args={"header":",".join(variables),"readers":"\n    ".join(readers),"formatstr":",".join(types), "variables": ",".join(variables),"imports":"\nimport ".join(all_imports.keys())}
+    args={"header":",".join(variables),"readers":"\n    ".join(readers),"formatstr":",".join(types), "variables": ",".join(variables),"imports":"\nimport ".join(list(all_imports.keys()))}
     pythonReturn="""
 import time
 import %(imports)s

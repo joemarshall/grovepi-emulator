@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from gpe_utils.tkimports import *
 
 
@@ -138,16 +138,19 @@ class ColourProperty:
         return self.value
        
     def _ChooseColour(self):
-        newColour=tkcc.askcolor(initialcolor=self.value)
+        newColour=tkcc.askcolor(initialcolor=self.getColourName(self.value))
         if newColour!=None and newColour[0]!=None:
-            print(newColour)
             self.value=newColour[0]
             self.rowParent.OnPropertyChange(self,self.value)
+       
+    def getColourName(self,rgb):
+        return "#%02x%02x%02x"%(int(rgb[0]),int(rgb[1]),int(rgb[2]))
+       
        
     def _makeRow(self,rowParent,rowNum):
         self.rowParent=rowParent
         label=tk.Label(rowParent,text=self.title)
         label.grid(row=rowNum,column=0)
-        button=tk.Button(rowParent,text="    ",command=self._ChooseColour)
+        button=tk.Button(rowParent,text="    ",command=self._ChooseColour,bg=self.getColourName(self.value))
         button.grid(row=rowNum,column=1)
                 

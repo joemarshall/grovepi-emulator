@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import threading
 import math
 import time
@@ -9,7 +9,7 @@ anaValues={}
 pinModes={}
 # what is written to it (or pull up if in input mode) - in 0 - 255 form
 outValues={}
-
+DHTVals={}
 
 # check for this if your code has to know whether it is in the emulator
 IS_EMULATOR=True
@@ -54,6 +54,9 @@ def temp(pin):
     t=(float)(1/(math.log(resistance/10000)/3975+1/298.15)-273.15) 
     return t
   
+def dht(pin,type=0):
+    return tuple(DHTVals[pin])
+  
   
 def pinMode(pin,mode):
   pinModes[pin]=mode
@@ -63,4 +66,4 @@ for c in range(0,9):
   anaValues[c]=0
   pinModes[c]="INPUT"
   outValues[c]=0
-              
+  DHTVals[c]=[0.0,0.0]

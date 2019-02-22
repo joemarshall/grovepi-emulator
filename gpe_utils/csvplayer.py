@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import csv
 import grovepi
 import time
@@ -14,7 +14,7 @@ class CSVPlayer:
         self.assignments={}
         self.allLines=[]
         for line in self.reader:
-            for key,val in line.items():
+            for key,val in list(line.items()):
                 try:
                     line[key]=float(val)
                     if line[key].is_integer():
@@ -94,7 +94,7 @@ class CSVPlayer:
     
     def onTimerFired(self):
         timeSinceStart=time.time()-self.playStartRealTime
-        for (key,targets) in self.assignments.items():
+        for (key,targets) in list(self.assignments.items()):
             for target in targets:
                 if type(target)!=tuple:
                     target.setValue(self.allLines[self.curPos][key])
