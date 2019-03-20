@@ -522,7 +522,7 @@ Currently has support for the following sensors:
         for c in components.allSensors:
             description+=c.classDescription()+"\n"
         description+="\nBy Joe Marshall\nhttp://www.cs.nott.ac.uk/~pszjm2\n\nDo what you want with the code. Any questions, email joe.marshall@nottingham.ac.uk "
-        tkm.showinfo("Grove PI Emulation Environment 3.0",message=description)
+        tkm.showinfo("Grove PI Emulation Environment 3.1",message=description)
 
     
     def loadSettingsIni(self,name,fromIni=False):
