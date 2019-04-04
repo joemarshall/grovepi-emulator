@@ -33,9 +33,11 @@ I2CPINS=[1,2,3]
 class AllPropertyFrame(tk.Toplevel):
     def __init__(self,parent):
         tk.Toplevel.__init__(self)
+        self.attributes('-toolwindow', True)
         self.iconbitmap(os.path.join(_mainPath,"main.ico"))
         self.title("Properties")
         self.componentSizers={}
+        self.protocol("WM_DELETE_WINDOW", self.OnClose)
         
     def addSensorObject(self,sensorObject,type):
         posBefore=0
@@ -60,7 +62,8 @@ class AllPropertyFrame(tk.Toplevel):
             self.componentSizers[sensorObject].destroy()    
             del self.componentSizers[sensorObject]
 
-
+    def OnClose(self,event=None):
+        return False
 
 
 class Frame(tk.Frame):
