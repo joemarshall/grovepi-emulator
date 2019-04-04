@@ -757,6 +757,7 @@ Currently has support for the following sensors:
 root =tk.Tk()                             #main window
 root.iconbitmap(os.path.join(_mainPath,"main.ico"))
 top = Frame(root,"GrovePi Emulator - <untitled>")
+root.geometry('800x700')#'%dx%d+0+0'%(root.winfo_width()+1, root.winfo_height()+1))
 #top.Show()
 
 try:
