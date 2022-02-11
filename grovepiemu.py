@@ -25,6 +25,8 @@ import components
 import threading
 import time
 import json
+import sensors 
+import graphs 
 
 DIGI_PINS=[2,3,4,5,6,7,8]
 ANA_PINS=[0,1,2]
