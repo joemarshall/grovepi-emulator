@@ -35,7 +35,8 @@ I2CPINS=[1,2,3]
 class AllPropertyFrame(tk.Toplevel):
     def __init__(self,parent):
         tk.Toplevel.__init__(self)
-        self.attributes('-toolwindow', True)
+        if sys.platform=="win32":
+            self.attributes('-toolwindow', True)
         self.iconbitmap(os.path.join(_mainPath,"main.ico"))
         self.title("Properties")
         self.componentSizers={}
