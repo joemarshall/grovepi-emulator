@@ -32,6 +32,11 @@ DIGI_PINS=[2,3,4,5,6,7,8]
 ANA_PINS=[0,1,2]
 I2CPINS=[1,2,3]
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
 class AllPropertyFrame(tk.Toplevel):
     def __init__(self,parent):
         tk.Toplevel.__init__(self)
@@ -71,7 +76,7 @@ class AllPropertyFrame(tk.Toplevel):
 
 def _make_button(parent,imageOrText,fn):
     if type(imageOrText)==tuple:
-        img=tk.PhotoImage(file=imageOrText[1])
+        img=tk.PhotoImage(file=resource_path(imageOrText[1]))
         button=tk.Button(parent,image=img,text=imageOrText[0],command=fn)
         button.img=img
         return button,imageOrText[0]
