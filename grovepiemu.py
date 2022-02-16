@@ -1,4 +1,4 @@
-
+3
 # Todo: RFID module, RFID tag module
 #
 # 
@@ -6,7 +6,7 @@
 
 import os    
 import sys
-
+from idlelib.tooltip import Hovertip
 
 if getattr( sys, 'frozen', False ) :
         # running in an installer bundle
@@ -68,6 +68,17 @@ class AllPropertyFrame(tk.Toplevel):
         return False
 
 
+def _make_button(parent,imageOrText,fn):
+    if type(imageOrText)==tuple:
+        img=tk.PhotoImage(file=imageOrText[1])
+        button=tk.Button(parent,image=img,text=imageOrText[0],command=fn)
+        button.img=img
+        return button,imageOrText[0]
+    else:
+        button=tk.Button(parent,text=imageOrText,command=fn)
+        return button,imageOrText
+
+
 class Frame(tk.Frame):
 
     def __init__(self, root,title):
@@ -107,115 +118,120 @@ class Frame(tk.Frame):
         
         root.config(menu=menuBar)
 
-
+        
+        defaultFont=tkf.nametofont('TkDefaultFont').actual()
+        self.labelFrameFont=(defaultFont['family'],defaultFont['size'],'bold')
+        
         self.subSizers={}
         self.containerSizers={}
         
         #column 0 = digital
         for row,pinNum in enumerate(DIGI_PINS):
-            allBox=tk.Frame(root,relief=tk.SUNKEN)
-            label=tk.Label(allBox, text="D%d"%pinNum)
-            label.grid(row=0,sticky=tk.NW)
-            containerBox=tk.Frame(allBox,relief=tk.SUNKEN)
-            containerBox.grid(row=1)
+            allBox=tk.LabelFrame(root,text="D%d"%pinNum,bd=0,bg='#eff',padx=4,pady=4,font=self.labelFrameFont)
+            containerBox=tk.Frame(allBox)
+            containerBox.grid(row=0)
 
             dummy=tk.Label(containerBox,text="Right click to connect sensor")
             dummy.pack()
 
-            allBox.grid(row=row,column=0,sticky=tk.W+tk.E+tk.N+tk.S )
+            allBox.grid(row=row,column=0,sticky=tk.W+tk.E+tk.N+tk.S,pady=2,padx=2 )
             
             self.containerSizers[(pinNum,"D")]=allBox
             self.subSizers[(pinNum,"D")]=containerBox
             
         #column 1 = analog
         for row,pinNum in enumerate(ANA_PINS):
-            allBox=tk.Frame(root,relief=tk.SUNKEN)
-            label=tk.Label(allBox, text="A%d"%pinNum)
-            label.grid(row=0,sticky=tk.NW)
-            containerBox=tk.Frame(allBox,relief=tk.SUNKEN)
-            containerBox.grid(row=1)
+            allBox=tk.LabelFrame(root,text="A%d"%pinNum,bd=0,bg='#fef',padx=4,pady=4,font=self.labelFrameFont)
+            containerBox=tk.Frame(allBox)
+            containerBox.grid(row=0)
 
             dummy=tk.Label(containerBox,text="Right click to connect sensor")
             dummy.pack()
 
-            allBox.grid(row=row*2,rowspan=2,column=1,sticky=tk.W+tk.E+tk.N+tk.S )
+            allBox.grid(row=row*2,rowspan=2,column=1,sticky=tk.W+tk.E+tk.N+tk.S,pady=2,padx=2 )
             
             self.containerSizers[(pinNum,"A")]=allBox
             self.subSizers[(pinNum,"A")]=containerBox
 
         #column 2 = i2c
         for row,pinNum in enumerate(I2CPINS):
-            allBox=tk.Frame(root,relief=tk.SUNKEN)
-            label=tk.Label(allBox, text="I2C-%d"%pinNum)
-            label.grid(row=0,sticky=tk.NW)
-            containerBox=tk.Frame(allBox,relief=tk.SUNKEN)
-            containerBox.grid(row=1)
+            allBox=tk.LabelFrame(root,text="I2C-%d"%pinNum,bd=0,bg='#ffe',padx=4,pady=4,font=self.labelFrameFont)
+            containerBox=tk.Frame(allBox)
+            containerBox.grid(row=0)
 
             dummy=tk.Label(containerBox,text="Right click to connect sensor")
             dummy.pack()
 
-            allBox.grid(row=row*2,rowspan=2,column=2,sticky=tk.W+tk.E+tk.N+tk.S )
+            allBox.grid(row=row*2,rowspan=2,column=2,sticky=tk.W+tk.E+tk.N+tk.S,pady=2,padx=2 )
             
             self.containerSizers[(pinNum,"I")]=allBox
             self.subSizers[(pinNum,"I")]=containerBox
             
         # CSV file transport, chooser, mapper
-        csvBox=tk.Frame(root)
-        transportBox=tk.Frame(csvBox)
-        transportBox2=tk.Frame(csvBox)
-        timeBox=tk.Frame(csvBox)
-        self.csvName=tk.Label(csvBox,text="Replay: ")
+        bg='#fee'
+        csvBox=tk.LabelFrame(root,text="CSV Playback of sensor data",bd=0,bg=bg,padx=4,pady=4,font=self.labelFrameFont)
+        transportBox=tk.Frame(csvBox,bg=bg)
+        transportBox2=tk.Frame(csvBox,bg=bg)
+        timeBox=tk.Frame(csvBox,bg=bg)
+        self.csvName=tk.Label(csvBox,text="Replay CSV: ",bg=bg)
         transportButtons=[("File..",self.OnLoadCSV),("Server...",self.OnServerConnect),("Clear..",self.OnUnloadCSV)]
-        transportButtons2=[("[]",self.OnStopCSV),("||",self.OnPauseCSV),(">",self.OnPlayCSV),("Map Fields...",self.OnMapCSV)]
+        transportButtons2=[(("[]","stopcsv.png"),self.OnStopCSV),(("||","pausecsv.png"),self.OnPauseCSV),((">","startcsv.png"),self.OnPlayCSV),("Map Fields...",self.OnMapCSV)]
         self.csvButtons={}
         for col,(label,fn) in enumerate(transportButtons):
-            button=tk.Button(transportBox,text=label,command=fn)
-            self.csvButtons[label]=button
-            button.grid(row=0,column=col)
+            button,button_id=_make_button(transportBox,label,fn)
+            self.csvButtons[button_id]=button
+            transportBox.columnconfigure(col,weight=1)
+            button.grid(row=0,column=col,sticky=tk.W+tk.E+tk.N+tk.S)
         for col,(label,fn) in enumerate(transportButtons2):
-            button=tk.Button(transportBox2,text=label,command=fn)
-            self.csvButtons[label]=button
-            button.grid(row=0,column=col)
+            button,button_id=_make_button(transportBox2,label,fn)
+            self.csvButtons[button_id]=button
+            transportBox2.columnconfigure(col,weight=1)
+            button.grid(row=0,column=col,sticky=tk.W+tk.E+tk.N+tk.S)
         
-        self.csvTimeReal=tk.Label(timeBox,text="00:00:00 (12/12/2012)",font="Courier")
-        self.csvTimeStart=tk.Label(timeBox,text="00:00:00",font="Courier")
-        tk.Label(timeBox,text="Time from start:").grid(row=0,column=0,sticky=tk.E)
-        tk.Label(timeBox,text="File Time:").grid(row=1,column=0,sticky=tk.E)
+        self.csvTimeReal=tk.Label(timeBox,text="00:00:00 (12/12/2012)",font="Courier",bg=bg)
+        self.csvTimeStart=tk.Label(timeBox,text="00:00:00",font="Courier",bg=bg)
+        tk.Label(timeBox,text="Time from start:",bg=bg).grid(row=0,column=0,sticky=tk.E)
+        tk.Label(timeBox,text="File Time:",bg=bg).grid(row=1,column=0,sticky=tk.E)
         self.csvTimeStart.grid(row=0,column=1,sticky=tk.W)
         self.csvTimeReal.grid(row=1,column=1,sticky=tk.W)
         
         self.csvName.grid(row=0,sticky=tk.W)
-        transportBox.grid(row=1,sticky=tk.W)
-        transportBox2.grid(row=2,sticky=tk.W)
+        transportBox.grid(row=1,sticky=tk.W+tk.E)
+        transportBox2.grid(row=2,sticky=tk.W+tk.E)
         timeBox.grid(row=3,sticky=tk.W)
         
-        csvBox.grid(row=7,column=2)            
+        csvBox.grid(row=7,column=2,sticky=tk.W+tk.E+tk.N+tk.S)            
         
-        scriptBox=tk.Frame(root)
-        self.scriptNameLabel=tk.Label(scriptBox,text="GrovePi Python Script:")
-        self.scriptStatus=tk.Label(scriptBox,text="")
+        # buttons to run python scripts
+        bg='#eef'
+        scriptBox=tk.LabelFrame(root,text="Run python scripts",bd=0,bg=bg,padx=4,pady=4,font=self.labelFrameFont)
+        self.scriptNameLabel=tk.Label(scriptBox,text="GrovePi Python Script:",bg=bg)
+        self.scriptStatus=tk.Label(scriptBox,text="",bg=bg)
         
         self.captureScriptButton=tk.Button(scriptBox,text="Capture script to file",command=self.OnCaptureToFile)
         self.runRemoteButton=tk.Button(scriptBox,text="Run on real PI via SSH",command=self.OnRunRemote)
         self.runLocalButton=tk.Button(scriptBox,text="Run in emulator",command=self.OnRunLocal)
         self.setAddressButton=tk.Button(scriptBox,text="Set remote address",command=self.OnSetRemote)
+        
 
         pyButtonBox=tk.Frame(scriptBox)
-        pyButtons=[("Load...",self.OnLoadPY),("Clear",self.OnClearPY),("[]",self.OnStopPY),(">",self.OnRunPY)]
+        pyButtons=[(("Load...","loadscript.png"),self.OnLoadPY),(("Clear","clearscript.png"),self.OnClearPY),(("[]","stopscript.png"),self.OnStopPY),((">","startscript.png"),self.OnRunPY)]
         self.scriptButtons={}
         for col,(label,fn) in enumerate(pyButtons):
-            button=tk.Button(pyButtonBox,text=label,command=fn)
-            button.grid(row=0,column=col)
-            self.scriptButtons[label]=button
+            button,button_id=_make_button(pyButtonBox,label,fn)
+            pyButtonBox.columnconfigure(col,weight=1)            
+            button.grid(row=0,column=col,sticky="EW")
+            self.scriptButtons[button_id]=button
 
-        self.scriptNameLabel.grid()
-        self.scriptStatus.grid()
-        pyButtonBox.grid()
-        self.captureScriptButton.grid()
-        self.runLocalButton.grid(pady=(10,0))
-        self.runRemoteButton.grid()
-        self.setAddressButton.grid()
-        scriptBox.grid(row=7,column=1)
+        self.scriptNameLabel.grid(sticky=tk.E+tk.W)
+        self.scriptStatus.grid(sticky=tk.E+tk.W)
+        pyButtonBox.grid(sticky=tk.E+tk.W)
+        self.captureScriptButton.grid(sticky=tk.E+tk.W)
+        self.runLocalButton.grid(pady=(10,0),sticky=tk.E+tk.W)
+        self.runRemoteButton.grid(sticky=tk.E+tk.W)
+        self.setAddressButton.grid(sticky=tk.E+tk.W)
+        scriptBox.columnconfigure(0,weight=1)        
+        scriptBox.grid(row=7,columnspan=2,sticky=tk.E+tk.W,padx=(0,10))
         
         if sys.platform == "darwin": 
             root.bind("<Button-2>", self.OnContextMenu)
@@ -240,7 +256,7 @@ class Frame(tk.Frame):
             self.loadSettingsIni(os.path.join(_mainPath,"grovepiemu.ini"),True)
         self.root.after(50,self.update)
         
-    def OnWritePython(self):
+    def OnWritePython(self,event=None):
         options={}
         options['defaultextension'] = '.csv'
         options['filetypes'] = [('Python script', '.py')]
@@ -258,14 +274,14 @@ class Frame(tk.Frame):
 
         
     def OnSetRemote(self):
-        oldAddress="g54mrt@"
+        oldAddress="dis@"
         if self.remoteAddress!=None:
             oldAddress=self.remoteAddress
         newAddress= tksd.askstring(parent=self.root,prompt="Enter the username and host of the Raspberry Pi to run the script on\nin the format: username@192.168.1.1",title="Run script remotely",initialvalue=oldAddress)
         if newAddress==None:
             return
         if newAddress.find("@")<0:
-            tkm.showwarning("Bad address",message="Address should be in the format username@address\nOn the lab Raspberry Pis, username is usually ubi, and address looks like 10.N.N.N")
+            tkm.showwarning("Bad address",message="Address should be in the format username@address\nOn the lab Raspberry Pis, username is usually dis, and address looks like 10.N.N.N")
             return
         self.remoteAddress=newAddress
         
@@ -757,6 +773,7 @@ Currently has support for the following sensors:
 
         
 root =tk.Tk()                             #main window
+root.tk_setPalette(background='#fff')
 root.iconbitmap(os.path.join(_mainPath,"main.ico"))
 top = Frame(root,"GrovePi Emulator - <untitled>")
 root.geometry('800x700')#'%dx%d+0+0'%(root.winfo_width()+1, root.winfo_height()+1))

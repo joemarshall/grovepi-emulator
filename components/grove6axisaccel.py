@@ -71,5 +71,5 @@ class GroveSixAxisAccelerometer:
         properties[axisIndex].SetValue(value)
         
     def getCSVCode(self):
-        return {"imports":["grove6axis"],"readall":"(acc_x,acc_y,acc_z),(mag_x,mag_y,mag_z)=grove6axis.getAccel(),grove6axis.getMag()","variables":["acc_x","acc_y","acc_z","mag_x","mag_y","mag_z"],"types":["%f","%f","%f","%f","%f","%f"]}
+        return {"imports":["sensors"],"pin_mappings":["\"magnetometer%d\":%d"%(self.pin,self.pin),"\"accel%d\":%d"%(self.pin,self.pin)],"reader":["sensors.magnetometer%d.get_xyz()"%self.pin,"sensors.accel%d.get_xyz()"%self.pin],"variable":["magnetometer%d_x,magnetometer%d_y,magnetometer%d_z"%(self.pin,self.pin,self.pin),"accel%d_x,accel%d_y,accel%d_z"%(self.pin,self.pin,self.pin)],"type":'%f,%f,%f'}
                 

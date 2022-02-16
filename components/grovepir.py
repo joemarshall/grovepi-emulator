@@ -41,5 +41,5 @@ class GrovePIR(GroveButton):
         None
 
     def getCSVCode(self):
-        return {"imports":["grovepi"],"reader":"grovepi.digitalRead(%d)"%self.pin,"variable":"pir%d"%self.pin}
+        return {"imports":["sensors"],"pin_mappings":["\"pir%d\":%d"%(self.pin,self.pin)],"reader":"sensors.pir%d.get_level()"%self.pin,"variable":"pir%d"%self.pin}
         

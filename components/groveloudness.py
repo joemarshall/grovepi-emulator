@@ -12,4 +12,4 @@ class GroveLoudness(GenericAnalog):
         return "Grove Loudness Sensor"
 
     def getCSVCode(self):
-        return {"imports":["grovepi"],"reader":"grovepi.analogRead(%d)"%self.pin,"variable":"loudness%d"%self.pin}
+        return {"imports":["sensors"],"pin_mappings":["\"sound%d\":%d"%(self.pin,self.pin)],"reader":"sensors.sound%d.get_level()"%self.pin,"variable":"sound%d"%self.pin}

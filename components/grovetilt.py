@@ -26,5 +26,5 @@ class GroveTilt(GenericDigital):
         self.propGrid.pack()
 
     def getCSVCode(self):
-        return {"imports":["grovepi"],"reader":"grovepi.digitalRead(%d)"%self.pin,"variable":"tilt%d"%self.pin}
+        return {"imports":["sensors"],"pin_mappings":["\"tilt%d\":%d"%(self.pin,self.pin)],"reader":"sensors.tilt%d.get_level()"%self.pin,"variable":"tilt%d"%self.pin}
         

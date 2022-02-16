@@ -73,5 +73,5 @@ class GroveDHT:
         [self.valueT,self.valueH][axisIndex].set(value)
         
     def getCSVCode(self):
-        return {"imports":["grovepi"],"readall":"(temp%d,humidity%d)=grovepi.dht(%d)"%(self.pin,self.pin,self.pin),"variables":["temp%d"%self.pin,"humidity%d"%self.pin],"types":["%f","%f"]}
+        return {"imports":["sensors"],"pin_mappings":["\"dht%d\":%d"%(self.pin,self.pin)],"reader":"sensors.dht%d.get_level()"%self.pin,"variable":"temp%d,humidity%d"%(self.pin,self.pin),"type":'%f,%f'}
                 

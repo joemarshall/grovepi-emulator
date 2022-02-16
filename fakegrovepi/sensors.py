@@ -17,7 +17,7 @@ def set_pins(sensor_pin_mapping:dict):
         sensorName=sensorName.lower()
         sensorName,sensorNum=re.match(r"(\D+)(\d*)",sensorName).groups()
         new_sensor=None
-        if sensorName=="light" or sensorName=="temperature_analog" or sensorName=="sound" or sensorName=="rotary_angle":
+        if sensorName=="light" or sensorName=="temperature_analog" or sensorName=="sound" or sensorName=="rotary_angle" or sensorName=='analog':
             new_sensor=AnalogPinSensor(pin)
         elif sensorName=="gyro":
             # ignore the pin, must be an i2c port
@@ -30,7 +30,7 @@ def set_pins(sensor_pin_mapping:dict):
             new_sensor=MagnetometerSensor()
         elif sensorName=="dht":
             new_sensor=DHTSensor(pin)
-        elif sensorName=="pir" or sensorName=="button" or sensorName=="touch":
+        elif sensorName=="pir" or sensorName=="button" or sensorName=="touch" or sensorName=='digital' or sensorName=='tilt':
             new_sensor=DigitalPinSensor(pin)
         elif sensorName=="ultrasonic":
             new_sensor=UltrasonicSensor(pin)
@@ -82,7 +82,7 @@ class AccelSensor:
     are typically X,Y axes side to side and top to bottom on the screen, Z coming out of the screen. Be aware that in addition
     to any motion of the phone, the accelerometer will pick up a constant $9.8 \\frac{m/s}^2$ acceleration due to gravity.
     """
-    def __init__():
+    def __init__(self):
         if _does_i2c_device_exist(0x18):
             self.accelFn=grove6axis.getAccel
         elif _does_i2c_device_exist(0x19):
@@ -125,7 +125,7 @@ class MagnetometerSensor:
     This allows you to get the magnetic field affecting a device along three axes, X, Y and Z, which for a phone 
     are typically X,Y axes side to side and top to bottom on the screen, Z coming out of the screen. 
     """
-    def __init__():
+    def __init__(self):
         if not _does_i2c_device_exist(0x18):
             raise IOError("Please connect an accelerometer and magnetometer board (not gyro board)")
 
@@ -163,11 +163,11 @@ class GyroSensor:
     are typically X,Y axes side to side and top to bottom on the screen, Z coming out of the screen. 
     """
 
-    def __init__():
+    def __init__(self):
         if not _does_i2c_device_exist(0x19):
             raise IOError("Please connect an accelerometer board")
 
-    def get_xyz():
+    def get_xyz(self):
         """ Get the rotation of the device
 
         This is returned in terms of x,y and z axes
@@ -183,7 +183,7 @@ class GyroSensor:
         """
         return grovegyro.getGyro()
         
-    def get_magnitude():
+    def get_magnitude(self):
         """ Get the magnitude of device rotation
         
         If the device is still, this will be 0

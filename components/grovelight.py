@@ -59,5 +59,5 @@ class GroveLight(GenericAnalog):
         grovepi.anaValues[self.pin]=value
                 
     def getCSVCode(self):
-        return {"imports":["grovepi"],"reader":"grovepi.analogRead(%d)"%self.pin,"variable":"light%d"%self.pin}
+        return {"imports":["sensors"],"pin_mappings":["\"light%d\":%d"%(self.pin,self.pin)],"reader":"sensors.light%d.get_level()"%self.pin,"variable":"light%d"%self.pin}
                 

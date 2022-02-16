@@ -67,5 +67,5 @@ class GroveGyro:
         properties[axisIndex].SetValue(value)
         
     def getCSVCode(self):
-        return {"imports":["grovegyro"],"readall":"(acc_x,acc_y,acc_z),(gyr_x,gyr_y,gyr_z)=grovegyro.getAccel(),grovegyro.getGyro()","variables":["acc_x","acc_y","acc_z","gyr_x","gyr_y","gyr_z"],"types":["%f","%f","%f","%f","%f","%f"]}
+        return {"imports":["sensors"],"pin_mappings":["\"gyro%d\":%d"%(self.pin,self.pin),"\"accel%d\":%d"%(self.pin,self.pin)],"reader":["sensors.gyro%d.get_xyz()"%self.pin,"sensors.accel%d.get_xyz()"%self.pin],"variable":["gyro%d_x,gyro%d_y,gyro%d_z"%(self.pin,self.pin,self.pin),"accel%d_x,accel%d_y,accel%d_z"%(self.pin,self.pin,self.pin)],"type":'%f,%f,%f'}
                 

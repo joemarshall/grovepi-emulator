@@ -46,6 +46,6 @@ class GroveUltrasonic:
         grovepi.digValues[self.pin]=value+2
 
     def getCSVCode(self):
-        return {"imports":["grovepi"],"reader":"grovepi.ultrasonicRead(%d)"%self.pin,"variable":"ultra%d"%self.pin}
+        return {"imports":["sensors"],"pin_mappings":["\"ultrasonic%d\":%d"%(self.pin,self.pin)],"reader":"sensors.ultrasonic%d.get_level()"%self.pin,"variable":"ultrasonic%d"%self.pin}
 
         
