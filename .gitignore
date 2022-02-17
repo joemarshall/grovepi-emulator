@@ -1,4 +1,6 @@
 *.pyc
 *.bak
+*.spec
+grovepiemu.ini
 build/
 dist/
