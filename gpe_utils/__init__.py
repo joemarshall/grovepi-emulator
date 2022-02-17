@@ -6,3 +6,4 @@ from .jsonplayer import *
 from .serverplayer import *
 from .runssh import *
 from .pythongenerator import *
+from .console_window import *

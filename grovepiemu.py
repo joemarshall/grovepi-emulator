@@ -85,7 +85,7 @@ def _make_button(parent,imageOrText,fn):
         return button,imageOrText
 
 
-class Frame(tk.Frame):
+class MainAppFrame(tk.Frame):
 
     def __init__(self, root,title):
         tk.Frame.__init__(self, master=root,width=640,height=480)
@@ -95,9 +95,15 @@ class Frame(tk.Frame):
         
         self.componentList={}
         self.properties=AllPropertyFrame(self)
+        self.after(1,self.properties.geometry,"-0+0")
+        
+        self.console=gpe_utils.ConsoleWindow(self)
+        self.after(1,self.console.geometry,"-0-30")
 
         root.protocol("WM_DELETE_WINDOW", self.OnClose)
-        
+        if sys.platform=="win32":
+            root.bind("<FocusIn>", self.handle_focus)
+
         menuBar = tk.Menu(root)
         fileMenu=tk.Menu(menuBar,tearoff=0)
         m_new=fileMenu.add_command(label="New",command=self.OnNew,underline=0,accelerator="Ctrl+N")
@@ -127,6 +133,7 @@ class Frame(tk.Frame):
         
         defaultFont=tkf.nametofont('TkDefaultFont').actual()
         self.labelFrameFont=(defaultFont['family'],defaultFont['size'],'bold')
+        self.timeFont=('courier',defaultFont['size'],defaultFont['weight'])
         
         self.subSizers={}
         self.containerSizers={}
@@ -194,8 +201,8 @@ class Frame(tk.Frame):
             transportBox2.columnconfigure(col,weight=1)
             button.grid(row=0,column=col,sticky=tk.W+tk.E+tk.N+tk.S)
         
-        self.csvTimeReal=tk.Label(timeBox,text="00:00:00 (12/12/2012)",font="Courier",bg=bg)
-        self.csvTimeStart=tk.Label(timeBox,text="00:00:00",font="Courier",bg=bg)
+        self.csvTimeReal=tk.Label(timeBox,text="00:00:00 (12/12/2012)",font=self.timeFont,bg=bg)
+        self.csvTimeStart=tk.Label(timeBox,text="00:00:00",font=self.timeFont,bg=bg)
         tk.Label(timeBox,text="Time from start:",bg=bg).grid(row=0,column=0,sticky=tk.E)
         tk.Label(timeBox,text="File Time:",bg=bg).grid(row=1,column=0,sticky=tk.E)
         self.csvTimeStart.grid(row=0,column=1,sticky=tk.W)
@@ -233,9 +240,9 @@ class Frame(tk.Frame):
         self.scriptStatus.grid(sticky=tk.E+tk.W)
         pyButtonBox.grid(sticky=tk.E+tk.W)
         self.captureScriptButton.grid(sticky=tk.E+tk.W)
-        self.runLocalButton.grid(pady=(10,0),sticky=tk.E+tk.W)
-        self.runRemoteButton.grid(sticky=tk.E+tk.W)
-        self.setAddressButton.grid(sticky=tk.E+tk.W)
+        self.runLocalButton.grid(pady=(12,2),sticky=tk.E+tk.W)
+        self.runRemoteButton.grid(pady=2,sticky=tk.E+tk.W)
+        self.setAddressButton.grid(pady=2,sticky=tk.E+tk.W)
         scriptBox.columnconfigure(0,weight=1)        
         scriptBox.grid(row=7,columnspan=2,sticky=tk.E+tk.W,padx=(0,10))
         
@@ -261,6 +268,11 @@ class Frame(tk.Frame):
         else:
             self.loadSettingsIni(os.path.join(_mainPath,"grovepiemu.ini"),True)
         self.root.after(50,self.update)
+
+    def handle_focus(self,evt):
+        self.properties.lower(self)
+        self.console.lower(self)
+        
         
     def OnWritePython(self,event=None):
         options={}
@@ -781,9 +793,9 @@ Currently has support for the following sensors:
 root =tk.Tk()                             #main window
 root.tk_setPalette(background='#fff')
 root.iconbitmap(os.path.join(_mainPath,"main.ico"))
-top = Frame(root,"GrovePi Emulator - <untitled>")
-root.geometry('800x700')#'%dx%d+0+0'%(root.winfo_width()+1, root.winfo_height()+1))
-#top.Show()
+top = MainAppFrame(root,"GrovePi Emulator - <untitled>")
+
+root.geometry('+0+0')
 
 try:
     root.mainloop()
