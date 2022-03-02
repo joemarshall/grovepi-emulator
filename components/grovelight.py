@@ -35,7 +35,7 @@ class GroveLight(GenericAnalog):
         self.rawValueProperty=propgrid.IntProperty("Raw",value=0)
         self.propGrid.Append( self.rawValueProperty )
         self.propGrid.SetCallback(self.OnPropGridChange)
-        self.propGrid.pack()
+        self.propGrid.pack(fill=tk.X)
         
     def OnPropGridChange(self,property,value):
         if property=="Raw":

@@ -20,7 +20,7 @@ class GenericDigital:
         return "Generic Digital Sensor"
 
     def initSmall(self,parent):    
-        self.checkBox=tk.Checkbutton(parent,text=self.title(),command=self.OnCheckBoxChange,variable=self.value)
+        self.checkBox=ttk.Checkbutton(parent,text=self.title(),command=self.OnCheckBoxChange,variable=self.value,style='Switch.TCheckbutton')
         self.checkBox.grid()
         
     def initPropertyPage(self,parent):
@@ -30,7 +30,7 @@ class GenericDigital:
         self.propGrid.Append( self.valueProperty )
         self.propGrid.Append( self.needsPullupProp )
         self.propGrid.SetCallback(self.OnPropGridChange)
-        self.propGrid.pack()
+        self.propGrid.pack(fill=tk.X)
         
     def OnPropGridChange(self,property,value):
         if property=="Value":

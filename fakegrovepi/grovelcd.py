@@ -75,4 +75,6 @@ def addGraphData(data,x,y,columns,rows):
                 row1[c+startChar]=outVal
                 row2[c+startChar]=ord(' ')
         _prevData=[row1,row2]
-    print(_prevData)
+    for c in range(32):
+        curLCDText[c]=chr(_prevData[c//16][c%16])
+    

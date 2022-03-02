@@ -19,7 +19,7 @@ class GroveLED:
         return "Grove LED"
     
     def initSmall(self,parent):
-        self.label=tk.Label(parent,text=self.title())
+        self.label=ttk.Label(parent,text=self.title())
         self.label.grid()
     
     def initPropertyPage(self,parent):
@@ -27,7 +27,7 @@ class GroveLED:
         self.valueProperty=propgrid.ColourProperty("Colour",value=self.colour)
         self.propGrid.Append( self.valueProperty )
         self.propGrid.SetCallback(self.OnPropGridChange)
-        self.propGrid.pack()
+        self.propGrid.pack(fill=tk.X)
 
     def OnPropGridChange(self,property,value):
         self.colour=value

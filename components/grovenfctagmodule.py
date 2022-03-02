@@ -57,16 +57,16 @@ class GroveNFCTagModule:
 
         
     def initSmall(self,parent):
-        self.titleLabel=tk.Label(parent,text=self.title())
+        self.titleLabel=ttk.Label(parent,text=self.title())
         self.titleLabel.grid(row=0,columnspan=4)
 
         self.vcmd=parent.register(self.validateHex)
         
         
-        self.blockLabel=tk.Label(parent,text="Block address: 0x")
+        self.blockLabel=ttk.Label(parent,text="Block address: 0x")
         self.blockLabel.grid(row=1,column=0)
         
-        self.blockEdit=tk.Entry(parent,validate="key",validatecommand=(self.vcmd,'%P'))
+        self.blockEdit=ttk.Entry(parent,validate="key",validatecommand=(self.vcmd,'%P'))
         self.blockEdit.insert(0,"000")
         self.blockEdit.grid(row=1,column=1,columnspan=3)
 
@@ -74,7 +74,7 @@ class GroveNFCTagModule:
         vcmd2=parent.register(self.validateHex2)
 
         for c in range(0,16):
-            dataPointEdit=tk.Entry(parent,name="%d"%c,validate="key",width=2,font="Courier",validatecommand=(vcmd2,'%P','%i','%d','%S','%W'))
+            dataPointEdit=ttk.Entry(parent,name="%d"%c,validate="key",width=2,font="Courier",validatecommand=(vcmd2,'%P','%i','%d','%S','%W'))
             dataPointEdit.bind("<FocusIn>",lambda event,val=c,s=self:s.OnEnterDataPoint(val) )
             dataPointEdit.bind("<FocusOut>",lambda event,val=c,s=self:s.OnLeaveDataPoint(val) )
             self.dataPoints.append(dataPointEdit)

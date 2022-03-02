@@ -1,4 +1,3 @@
-3
 # Todo: RFID module, RFID tag module
 #
 # 
@@ -57,10 +56,13 @@ class AllPropertyFrame(tk.Toplevel):
         elif type=="I":
             rowNum=len(DIGI_PINS)+len(ANA_PINS)+I2CPINS.index(pin)
             
-        newFrame=tk.Frame(self)
+        newFrame=ttk.Frame(self)
         sensorObject.initPropertyPage(newFrame)
         self.componentSizers[sensorObject]=newFrame
-        newFrame.grid(row=rowNum)
+        newFrame.grid(row=rowNum,sticky=tk.W+tk.E)
+        self.columnconfigure(0,weight=1)
+        self.rowconfigure(rowNum,weight=1)
+        
         
     def removeSensorObject(self,sensorObject):
         if sensorObject in self.componentSizers:
@@ -77,18 +79,22 @@ class AllPropertyFrame(tk.Toplevel):
 def _make_button(parent,imageOrText,fn):
     if type(imageOrText)==tuple:
         img=tk.PhotoImage(file=resource_path(imageOrText[1]))
-        button=tk.Button(parent,image=img,text=imageOrText[0],command=fn)
-        button.img=img
+        button=ttk.Button(parent,image=img,text=imageOrText[0],command=fn)
+        button.img=img # avoid image being garbage collected
         return button,imageOrText[0]
     else:
-        button=tk.Button(parent,text=imageOrText,command=fn)
+        button=ttk.Button(parent,text=imageOrText,command=fn)
         return button,imageOrText
 
 
-class MainAppFrame(tk.Frame):
+class MainAppFrame(ttk.Frame):
 
     def __init__(self, root,title):
-        tk.Frame.__init__(self, master=root,width=640,height=480)
+        ttk.Frame.__init__(self, master=root,width=640,height=480)
+        root.columnconfigure(0,weight=1)
+        root.rowconfigure(0,weight=1)
+
+
         
         self.root=root
         self.root.wm_title(title)
@@ -140,11 +146,11 @@ class MainAppFrame(tk.Frame):
         
         #column 0 = digital
         for row,pinNum in enumerate(DIGI_PINS):
-            allBox=tk.LabelFrame(root,text="D%d"%pinNum,bd=0,bg='#eff',padx=4,pady=4,font=self.labelFrameFont)
-            containerBox=tk.Frame(allBox)
+            allBox=ttk.LabelFrame(self,text="D%d"%pinNum)
+            containerBox=ttk.Frame(allBox)
             containerBox.grid(row=0)
 
-            dummy=tk.Label(containerBox,text="Right click to connect sensor")
+            dummy=ttk.Label(containerBox,text="Right click to connect sensor")
             dummy.pack()
 
             allBox.grid(row=row,column=0,sticky=tk.W+tk.E+tk.N+tk.S,pady=2,padx=2 )
@@ -154,11 +160,11 @@ class MainAppFrame(tk.Frame):
             
         #column 1 = analog
         for row,pinNum in enumerate(ANA_PINS):
-            allBox=tk.LabelFrame(root,text="A%d"%pinNum,bd=0,bg='#fef',padx=4,pady=4,font=self.labelFrameFont)
-            containerBox=tk.Frame(allBox)
+            allBox=ttk.LabelFrame(self,text="A%d"%pinNum)
+            containerBox=ttk.Frame(allBox)
             containerBox.grid(row=0)
 
-            dummy=tk.Label(containerBox,text="Right click to connect sensor")
+            dummy=ttk.Label(containerBox,text="Right click to connect sensor")
             dummy.pack()
 
             allBox.grid(row=row*2,rowspan=2,column=1,sticky=tk.W+tk.E+tk.N+tk.S,pady=2,padx=2 )
@@ -168,11 +174,11 @@ class MainAppFrame(tk.Frame):
 
         #column 2 = i2c
         for row,pinNum in enumerate(I2CPINS):
-            allBox=tk.LabelFrame(root,text="I2C-%d"%pinNum,bd=0,bg='#ffe',padx=4,pady=4,font=self.labelFrameFont)
-            containerBox=tk.Frame(allBox)
+            allBox=ttk.LabelFrame(self,text="I2C-%d"%pinNum)
+            containerBox=ttk.Frame(allBox)
             containerBox.grid(row=0)
 
-            dummy=tk.Label(containerBox,text="Right click to connect sensor")
+            dummy=ttk.Label(containerBox,text="Right click to connect sensor")
             dummy.pack()
 
             allBox.grid(row=row*2,rowspan=2,column=2,sticky=tk.W+tk.E+tk.N+tk.S,pady=2,padx=2 )
@@ -181,12 +187,11 @@ class MainAppFrame(tk.Frame):
             self.subSizers[(pinNum,"I")]=containerBox
             
         # CSV file transport, chooser, mapper
-        bg='#fee'
-        csvBox=tk.LabelFrame(root,text="CSV Playback of sensor data",bd=0,bg=bg,padx=4,pady=4,font=self.labelFrameFont)
-        transportBox=tk.Frame(csvBox,bg=bg)
-        transportBox2=tk.Frame(csvBox,bg=bg)
-        timeBox=tk.Frame(csvBox,bg=bg)
-        self.csvName=tk.Label(csvBox,text="Replay CSV: ",bg=bg)
+        csvBox=ttk.LabelFrame(self,text="CSV Playback of sensor data")
+        transportBox=ttk.Frame(csvBox)
+        transportBox2=ttk.Frame(csvBox)
+        timeBox=ttk.Frame(csvBox)
+        self.csvName=ttk.Label(csvBox,text="Replay CSV: ")
         transportButtons=[("File..",self.OnLoadCSV),("Server...",self.OnServerConnect),("Clear..",self.OnUnloadCSV)]
         transportButtons2=[(("[]","stopcsv.png"),self.OnStopCSV),(("||","pausecsv.png"),self.OnPauseCSV),((">","startcsv.png"),self.OnPlayCSV),("Map Fields...",self.OnMapCSV)]
         self.csvButtons={}
@@ -201,10 +206,10 @@ class MainAppFrame(tk.Frame):
             transportBox2.columnconfigure(col,weight=1)
             button.grid(row=0,column=col,sticky=tk.W+tk.E+tk.N+tk.S)
         
-        self.csvTimeReal=tk.Label(timeBox,text="00:00:00 (12/12/2012)",font=self.timeFont,bg=bg)
-        self.csvTimeStart=tk.Label(timeBox,text="00:00:00",font=self.timeFont,bg=bg)
-        tk.Label(timeBox,text="Time from start:",bg=bg).grid(row=0,column=0,sticky=tk.E)
-        tk.Label(timeBox,text="File Time:",bg=bg).grid(row=1,column=0,sticky=tk.E)
+        self.csvTimeReal=ttk.Label(timeBox,text="00:00:00 (12/12/2012)",font=self.timeFont)
+        self.csvTimeStart=ttk.Label(timeBox,text="00:00:00",font=self.timeFont)
+        ttk.Label(timeBox,text="Time from start:").grid(row=0,column=0,sticky=tk.E)
+        ttk.Label(timeBox,text="File Time:").grid(row=1,column=0,sticky=tk.E)
         self.csvTimeStart.grid(row=0,column=1,sticky=tk.W)
         self.csvTimeReal.grid(row=1,column=1,sticky=tk.W)
         
@@ -216,18 +221,18 @@ class MainAppFrame(tk.Frame):
         csvBox.grid(row=7,column=2,sticky=tk.W+tk.E+tk.N+tk.S)            
         
         # buttons to run python scripts
-        bg='#eef'
-        scriptBox=tk.LabelFrame(root,text="Run python scripts",bd=0,bg=bg,padx=4,pady=4,font=self.labelFrameFont)
-        self.scriptNameLabel=tk.Label(scriptBox,text="GrovePi Python Script:",bg=bg)
-        self.scriptStatus=tk.Label(scriptBox,text="",bg=bg)
+        scriptBox=ttk.LabelFrame(self,text="Run python scripts")
+        self.scriptNameLabel=ttk.Label(scriptBox,text="GrovePi Python Script:")
+        self.scriptStatus=ttk.Label(scriptBox,text="")
         
-        self.captureScriptButton=tk.Button(scriptBox,text="Capture script to file",command=self.OnCaptureToFile)
-        self.runRemoteButton=tk.Button(scriptBox,text="Run on real PI via SSH",command=self.OnRunRemote)
-        self.runLocalButton=tk.Button(scriptBox,text="Run in emulator",command=self.OnRunLocal)
-        self.setAddressButton=tk.Button(scriptBox,text="Set remote address",command=self.OnSetRemote)
+        self.remoteScript=tk.IntVar(0)
+        self.captureScriptButton=ttk.Button(scriptBox,text="Capture script to file",command=self.OnCaptureToFile)
+        self.runRemoteButton=ttk.Radiobutton(scriptBox,text="Run on real PI via SSH",command=self.OnRunRemote,var=self.remoteScript,value=1)
+        self.runLocalButton=ttk.Radiobutton(scriptBox,text="Run in emulator",command=self.OnRunLocal,var=self.remoteScript,value=0)
+        self.setAddressButton=ttk.Button(scriptBox,text="Set remote address",command=self.OnSetRemote)
         
 
-        pyButtonBox=tk.Frame(scriptBox)
+        pyButtonBox=ttk.Frame(scriptBox)
         pyButtons=[(("Load...","loadscript.png"),self.OnLoadPY),(("Clear","clearscript.png"),self.OnClearPY),(("[]","stopscript.png"),self.OnStopPY),((">","startscript.png"),self.OnRunPY)]
         self.scriptButtons={}
         for col,(label,fn) in enumerate(pyButtons):
@@ -238,8 +243,8 @@ class MainAppFrame(tk.Frame):
 
         self.scriptNameLabel.grid(sticky=tk.E+tk.W)
         self.scriptStatus.grid(sticky=tk.E+tk.W)
-        pyButtonBox.grid(sticky=tk.E+tk.W)
         self.captureScriptButton.grid(sticky=tk.E+tk.W)
+        pyButtonBox.grid(sticky=tk.E+tk.W)
         self.runLocalButton.grid(pady=(12,2),sticky=tk.E+tk.W)
         self.runRemoteButton.grid(pady=2,sticky=tk.E+tk.W)
         self.setAddressButton.grid(pady=2,sticky=tk.E+tk.W)
@@ -254,7 +259,6 @@ class MainAppFrame(tk.Frame):
         self.player=None
         self.scriptPath=None
         self.scriptRunner=None
-        self.remoteScript=False
         self.remoteAddress=""
         self.lastAssignments={}
         self.settingsFile=None
@@ -267,11 +271,22 @@ class MainAppFrame(tk.Frame):
                self.root.wm_title("GrovePi Emulator - %s"%self.settingsFile)
         else:
             self.loadSettingsIni(os.path.join(_mainPath,"grovepiemu.ini"),True)
+            
+        self.grid(column=0,row=0,sticky=tk.NSEW)
+        
+        for row_num in range(7):
+            self.rowconfigure(row_num, weight=1)
+        for col_num in range(3):
+            self.columnconfigure(col_num, weight=1)
         self.root.after(50,self.update)
 
     def handle_focus(self,evt):
-        self.properties.lower(self)
-        self.console.lower(self)
+        if root.tk.eval('wm stackorder '+str(self.properties)+' isabove '+str(self.console))=="0":
+            self.console.lower(self)
+            self.properties.lower(self.console)
+        else:
+            self.properties.lower(self)
+            self.console.lower(self.properties)
         
         
     def OnWritePython(self,event=None):
@@ -307,12 +322,12 @@ class MainAppFrame(tk.Frame):
         if self.remoteAddress==None or len(self.remoteAddress)==0:
             self.OnSetRemote()
         if self.remoteAddress!=None and len(self.remoteAddress)>0:
-            self.remoteScript=True
-            self.OnRunPY()
+            self.remoteScript.set(1)
+        else:
+            self.remoteScript.set(0)
 
     def OnRunLocal(self):
-        self.remoteScript=False
-        self.OnRunPY()
+        self.remoteScript.set(0)
         
             
     def OnCaptureToFile(self):
@@ -358,7 +373,7 @@ class MainAppFrame(tk.Frame):
         if self.scriptPath==None:
             self.scriptNameLabel.config(text="No python script loaded")
         else:
-            if self.remoteScript:
+            if self.remoteScript.get()==1:
                 self.scriptNameLabel.config(text="Python script: %s"%os.path.basename(self.scriptPath))
                 self.scriptRunner=gpe_utils.RemoteRunner(self.scriptPath,self.remoteAddress,captureFile=self.nextCaptureFile)
             else:
@@ -494,7 +509,7 @@ class MainAppFrame(tk.Frame):
             self.player.pausePlaying()
         
     def OnPlayCSV(self):
-        if self.remoteScript:
+        if self.remoteScript.get()==1:
             tkm.showwarning("CSV Playback only works locally",message="You can only play CSV files back in the emulator,\nthe PI always uses real sensors.\nSwitching to emulated script.")
             if self.scriptRunner!=None and self.scriptRunner.running():            
                 self.scriptRunner.stop()               
@@ -598,9 +613,9 @@ Currently has support for the following sensors:
                     self.OnUnloadCSV()
                 if fromIni:
                     self.remoteAddress=None
-                    self.remoteScript=False
+                    self.remoteScript.set(0)
                 else:
-                    self.remoteScript=allConfig["remoteScript"]
+                    self.remoteScript.set(allConfig["remoteScript"])
                     self.remoteAddress=allConfig["remoteAddress"]
                 self.OnLoadPY(reloadCurrent=True,start=False)
 
@@ -647,7 +662,7 @@ Currently has support for the following sensors:
                 allConfig["csvPath"]=self.relPath(self.csvPath,name)
             else:
                 allConfig["csvPath"]=""
-            allConfig["remoteScript"]=self.remoteScript
+            allConfig["remoteScript"]=self.remoteScript.get()
             allConfig["remoteAddress"]=self.remoteAddress
 #            allConfig["currentFileOpen"]=self.relPath(self.settingsFile,name)
             with open(name,'w') as file:
@@ -729,7 +744,7 @@ Currently has support for the following sensors:
         for child in sizer.winfo_children():
             child.destroy()
         if not replacing:
-            dummy=tk.Label(sizer,text="Right click to connect sensor")
+            dummy=ttk.Label(sizer,text="Right click to connect sensor")
             dummy.pack()
         
         
@@ -743,41 +758,40 @@ Currently has support for the following sensors:
             self.csvTimeStart.config(text=time.strftime("%H:%M:%S",time.gmtime(ofsTime)))
             self.csvTimeReal.config(text=time.strftime("%H:%M:%S (%d/%m/%Y)",time.gmtime(realTime)))
         if self.player==None or not self.player.playing():
-            self.csvButtons[">"].config(bg="pale green",relief=tk.RAISED)
+            self.csvButtons[">"].config(style="TButton")
             if self.player!=None and self.player.paused():
-                self.csvButtons["[]"].config(bg="#ff9f9f",relief=tk.RAISED)
-                self.csvButtons["||"].config(bg="red",relief=tk.SUNKEN)           
+                self.csvButtons["||"].config(style="Accent.TButton")           
             else:
-                self.csvButtons["[]"].config(bg="red",relief=tk.SUNKEN)
-                self.csvButtons["||"].config(bg="#ff9f9f",relief=tk.RAISED)
+                self.csvButtons["||"].config(style="TButton")           
         else:
-            self.csvButtons[">"].config(bg="#00ff00",relief=tk.SUNKEN)
-            self.csvButtons["[]"].config(bg="#ff9f9f",relief=tk.RAISED)
-            self.csvButtons["||"].config(bg="#ff9f9f",relief=tk.RAISED)
-        self.captureScriptButton.config(bg="gray80")
+            self.csvButtons[">"].config(style="Accent.TButton")
+            self.csvButtons["||"].config(style="TButton")
         self.captureScriptButton.config(text="Capture script to file")
-        if self.remoteScript:
-            self.runRemoteButton.config(bg="#7fff7f")
-            self.runLocalButton.config(bg="gray80")
-        else:
-            self.runRemoteButton.config(bg="gray80")
-            self.runLocalButton.config(bg="#7f7fff")
+        self.captureScriptButton.config(style="TButton")                
 
         
         if self.scriptRunner!=None:
+            self.scriptButtons['>'].config(style="TButton")
             if self.scriptRunner.running():
+                self.scriptButtons['>'].config(style="Accent.TButton")
                 self.scriptStatus.config(text="Running")
-                if self.remoteScript:
+                if self.remoteScript.get()==1:
                     self.scriptStatus.config(text="Run at: %s"%self.remoteAddress)                
                 else:
                     self.scriptStatus.config(text="Running in emulator")                
                 if self.scriptRunner.capturing():
-                    self.captureScriptButton.config(bg="#ff7f7f")
+                    self.captureScriptButton.config(style="Accent.TButton")
                     self.captureScriptButton.config(text="Stop capturing")                
             else:
-                self.scriptStatus.config(text="Stopped")                
+                if self.remoteScript.get()==1:
+                    self.scriptStatus.config(text="Stopped: %s"%self.remoteAddress)                
+                else:
+                    self.scriptStatus.config(text="Stopped")                
         else:
-            self.scriptStatus.config(text="Stopped")
+            if self.remoteScript.get()==1:
+                self.scriptStatus.config(text="Stopped: %s"%self.remoteAddress)                
+            else:
+                self.scriptStatus.config(text="Stopped")                
         self.root.after(50,self.update)
         
         
@@ -787,12 +801,14 @@ Currently has support for the following sensors:
         self.saveSettingsIni(os.path.join(_mainPath,"grovepiemu.ini"))
         self.root.quit()
 
-
-
-        
 root =tk.Tk()                             #main window
 root.tk_setPalette(background='#fff')
 root.iconbitmap(os.path.join(_mainPath,"main.ico"))
+
+root.tk.call("source", "Azure-ttk-theme/azure.tcl")
+root.tk.call("set_theme", "light")
+#ttk.Style().configure("TButton",background='#f00')
+
 top = MainAppFrame(root,"GrovePi Emulator - <untitled>")
 
 root.geometry('+0+0')

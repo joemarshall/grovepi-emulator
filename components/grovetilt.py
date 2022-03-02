@@ -23,7 +23,7 @@ class GroveTilt(GenericDigital):
         self.valueProperty=propgrid.BoolProperty("Value",value=False)
         self.propGrid.Append( self.valueProperty )
         self.propGrid.SetCallback(self.OnPropGridChange)
-        self.propGrid.pack()
+        self.propGrid.pack(fill=tk.X)
 
     def getCSVCode(self):
         return {"imports":["sensors"],"pin_mappings":["\"tilt%d\":%d"%(self.pin,self.pin)],"reader":"sensors.tilt%d.get_level()"%self.pin,"variable":"tilt%d"%self.pin}

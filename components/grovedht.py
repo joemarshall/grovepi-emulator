@@ -23,15 +23,15 @@ class GroveDHT:
         return "Grove Digital Humidity & Temperature"
 
     def initSmall(self,parent):
-        self.titleLabel=tk.Label(parent,text=self.title())
+        self.titleLabel=ttk.Label(parent,text=self.title())
         self.titleLabel.grid(columnspan=2)
-        self.tLabel=tk.Label(parent,text="Temp:")
+        self.tLabel=ttk.Label(parent,text="Temp:")
         self.tLabel.grid(column=0,row=1)
-        self.hLabel=tk.Label(parent,text="Humidity:")
+        self.hLabel=ttk.Label(parent,text="Humidity:")
         self.hLabel.grid(column=0,row=2)
 
-        self.sliderT=tk.Scale(parent,from_=0,to=100,resolution=0.1,orient=tk.HORIZONTAL,command=self.OnSliderChange,variable=self.valueT)
-        self.sliderH=tk.Scale(parent,from_=0,to=100,resolution=0.1,orient=tk.HORIZONTAL,command=self.OnSliderChange,variable=self.valueH)
+        self.sliderT=ttk.Scale(parent,from_=0,to=100,orient=tk.HORIZONTAL,command=self.OnSliderChange,variable=self.valueT)
+        self.sliderH=ttk.Scale(parent,from_=0,to=100,orient=tk.HORIZONTAL,command=self.OnSliderChange,variable=self.valueH)
         self.sliderT.grid(column=1,row=1,sticky=tk.W+tk.E)
         self.sliderH.grid(column=1,row=2,sticky=tk.W+tk.E)
  
@@ -49,7 +49,7 @@ class GroveDHT:
         self.propGrid.Append( self.tProp )
         self.propGrid.Append( self.hProp )
         self.propGrid.SetCallback(self.OnPropGridChange)
-        self.propGrid.pack()
+        self.propGrid.pack(fill=tk.X)
         
     def OnPropGridChange(self,property,value):
         axisIndex=self.axisNames.index(property)

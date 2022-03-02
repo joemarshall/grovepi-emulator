@@ -19,11 +19,11 @@ class GroveGyro:
         return "Grove Six Axis Gyro/Accelerometer"
 
     def initSmall(self,parent):
-        self.titleLabel=tk.Label(parent,text=self.title())
+        self.titleLabel=ttk.Label(parent,text=self.title())
         self.titleLabel.grid()
-        self.labelG=tk.Label(parent,text="Gyro: +00.000 +00.000 +00.000",font="Courier")
+        self.labelG=ttk.Label(parent,text="Gyro: +00.000 +00.000 +00.000",font="Courier")
         self.labelG.grid()
-        self.labelA=tk.Label(parent,text=" Acc: +00.000 +00.000 +00.000",font="Courier")
+        self.labelA=ttk.Label(parent,text=" Acc: +00.000 +00.000 +00.000",font="Courier")
         self.labelA.grid()
         
     def initPropertyPage(self,parent):
@@ -41,7 +41,7 @@ class GroveGyro:
         self.propGrid.Append( self.gyProp )
         self.propGrid.Append( self.gzProp )
         self.propGrid.SetCallback(self.OnPropGridChange)
-        self.propGrid.pack()
+        self.propGrid.pack(fill=tk.X)
         
     def OnPropGridChange(self,property,value):
         axisIndex=self.axisNames.index(property)

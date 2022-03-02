@@ -8,13 +8,15 @@ class GrovePIR(GroveButton):
     
     def __init__(self,inputNum):
         GroveButton.__init__(self,inputNum)
+        self.value=tk.IntVar()
         self.callbackID=None
         
     def title(self):
         return "D%d: Grove PIR"%self.pin
 
     def initSmall(self,parent):
-        self.button=tk.Button(parent,text=self.title(),bg="red",activebackground="green")
+    #todo
+        self.button=ttk.Checkbutton(parent, text=self.title(), style='Toggle.TButton',variable=self.value)
         self.button.bind("<Button-1>",self.OnButtonDown)
         self.button.bind("<ButtonRelease-1>",self.OnButtonUp)
         self.button.pack()
@@ -30,7 +32,8 @@ class GrovePIR(GroveButton):
         
     def release(self):
         self.callbackID=None
-        self.setValue(False)        
+        self.setValue(False)
+        self.value.set(False)
         
     @classmethod
     def classDescription(cls):

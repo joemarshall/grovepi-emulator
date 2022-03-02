@@ -2,12 +2,16 @@
 from gpe_utils.tkimports import *
 
 
-class PropertyGrid(tk.Frame):
+class PropertyGrid(ttk.Frame):
 
     def __init__(self,parent,title):
-        tk.Frame.__init__(self,parent)
-        title=tk.Label(self,text=title,bg="black",fg="white")        
-        title.grid(row=0,column=0,columnspan=2)
+        ttk.Frame.__init__(self,parent)
+        #todo
+        title=ttk.Label(self,text=title,anchor=tk.CENTER,background='#000',foreground='#fff')        
+#        title=ttk.Label(self,text=title,bg="black",fg="white")        
+        title.grid(row=0,column=0,columnspan=2,sticky=tk.W+tk.E)
+        self.columnconfigure(0,weight=1)
+        self.columnconfigure(1,weight=1)
         self.properties=[]
         self.callback=None
         
@@ -38,10 +42,10 @@ class BoolProperty:
         return self.value.get()
        
     def _makeRow(self,rowParent,rowNum):
-        label=tk.Label(rowParent,text=self.title)
-        label.grid(row=rowNum,column=0)
-        checkBox=tk.Checkbutton(rowParent,command=lambda s=self:rowParent.OnPropertyChange(s),variable=self.value)
-        checkBox.grid(row=rowNum,column=1)
+        label=ttk.Label(rowParent,text=self.title)
+        label.grid(row=rowNum,column=0,sticky=tk.W)
+        checkBox=ttk.Checkbutton(rowParent,command=lambda s=self:rowParent.OnPropertyChange(s),variable=self.value)
+        checkBox.grid(row=rowNum,column=1,sticky=tk.E)
         
 class IntProperty:
     def __init__(self,title,value,minVal=0,maxVal=1023):
@@ -77,12 +81,12 @@ class IntProperty:
         self.vcmd=rowParent.register(self.validate)
     
         self.rowParent=rowParent
-        label=tk.Label(rowParent,text=self.title)
-        label.grid(row=rowNum,column=0)        
+        label=ttk.Label(rowParent,text=self.title)
+        label.grid(row=rowNum,column=0,sticky=tk.W)        
 
-        self.spinBox=tk.Spinbox(rowParent,from_=self.minVal,to=self.maxVal,validate="key",validatecommand=(self.vcmd,'%P'),textvariable=self.value)
+        self.spinBox=ttk.Spinbox(rowParent,from_=self.minVal,to=self.maxVal,validate="key",validatecommand=(self.vcmd,'%P'),textvariable=self.value)
 
-        self.spinBox.grid(row=rowNum,column=1)
+        self.spinBox.grid(row=rowNum,column=1,sticky=tk.E)
         
         
 class FloatProperty:
@@ -119,11 +123,11 @@ class FloatProperty:
         self.vcmd=rowParent.register(self.validate)
     
         self.rowParent=rowParent
-        label=tk.Label(rowParent,text=self.title)
-        label.grid(row=rowNum,column=0)        
+        label=ttk.Label(rowParent,text=self.title)
+        label.grid(row=rowNum,column=0,sticky=tk.W)        
 
-        self.spinBox=tk.Entry(rowParent,validate="key",validatecommand=(self.vcmd,'%P'),textvariable=self.value)
-        self.spinBox.grid(row=rowNum,column=1)
+        self.spinBox=ttk.Entry(rowParent,validate="key",validatecommand=(self.vcmd,'%P'),textvariable=self.value)
+        self.spinBox.grid(row=rowNum,column=1,sticky=tk.E)
                 
                 
 class ColourProperty:
@@ -149,8 +153,9 @@ class ColourProperty:
        
     def _makeRow(self,rowParent,rowNum):
         self.rowParent=rowParent
-        label=tk.Label(rowParent,text=self.title)
-        label.grid(row=rowNum,column=0)
-        button=tk.Button(rowParent,text="    ",command=self._ChooseColour,bg=self.getColourName(self.value))
-        button.grid(row=rowNum,column=1)
+        label=ttk.Label(rowParent,text=self.title)
+        label.grid(row=rowNum,column=0,sticky=tk.W)
+        # todo
+        button=ttk.Button(rowParent,text="    ",command=self._ChooseColour)#,bg=self.getColourName(self.value))
+        button.grid(row=rowNum,column=1,sticky=tk.E)
                 

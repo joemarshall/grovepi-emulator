@@ -19,9 +19,9 @@ class GroveUltrasonic:
         return "Grove Ultrasonic Ranger"
 
     def initSmall(self,parent):
-        self.label=tk.Label(parent,text=self.title())
+        self.label=ttk.Label(parent,text=self.title())
         self.label.grid()
-        self.slider=tk.Scale(parent,from_=0,to=400,orient=tk.HORIZONTAL,command=self.OnSliderChange,variable=self.value)
+        self.slider=ttk.Scale(parent,from_=0,to=400,orient=tk.HORIZONTAL,command=self.OnSliderChange,variable=self.value)
         self.slider.grid()
         
     def initPropertyPage(self,parent):
@@ -29,7 +29,7 @@ class GroveUltrasonic:
         self.valueProperty=propgrid.IntProperty("Distance (cm)",value=0)
         self.propGrid.Append( self.valueProperty )
         self.propGrid.SetCallback(self.OnPropGridChange)
-        self.propGrid.pack()
+        self.propGrid.pack(fill=tk.X)
         
     def OnPropGridChange(self,property,value):
         if property=="Distance (cm)":

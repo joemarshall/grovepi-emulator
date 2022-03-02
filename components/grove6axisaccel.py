@@ -20,11 +20,11 @@ class GroveSixAxisAccelerometer:
         return "Grove Six Axis Accel/Magnetometer"
 
     def initSmall(self,parent):
-        self.titleLabel=tk.Label(parent,text=self.title())
+        self.titleLabel=ttk.Label(parent,text=self.title())
         self.titleLabel.grid()
-        self.labelM=tk.Label(parent,text="Mag: +00.000 +00.000 +00.000",font="Courier")
+        self.labelM=ttk.Label(parent,text="Mag: +00.000 +00.000 +00.000",font="Courier")
         self.labelM.grid()
-        self.labelA=tk.Label(parent,text="Acc: +00.000 +00.000 +00.000",font="Courier")
+        self.labelA=ttk.Label(parent,text="Acc: +00.000 +00.000 +00.000",font="Courier")
         self.labelA.grid()
         self.setValue(0,0.0)
         self.setValue(1,10.0)
@@ -45,7 +45,7 @@ class GroveSixAxisAccelerometer:
         self.propGrid.Append( self.myProp )
         self.propGrid.Append( self.mzProp )
         self.propGrid.SetCallback(self.OnPropGridChange)
-        self.propGrid.pack()
+        self.propGrid.pack(fill=tk.X)
         
     def OnPropGridChange(self,property,value):
         axisIndex=self.axisNames.index(property)
