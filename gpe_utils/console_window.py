@@ -6,6 +6,7 @@ class ConsoleWindow(tk.Toplevel):
     def __init__(self,parent):
         self.old_stdout=sys.stdout
         tk.Toplevel.__init__(self)
+        print("MAKING console")
         if sys.platform=="win32":
             self.attributes('-toolwindow', True)
 #        self.iconbitmap(os.path.join(_mainPath,"main.ico"))

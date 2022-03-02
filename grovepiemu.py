@@ -101,10 +101,11 @@ class MainAppFrame(ttk.Frame):
         
         self.componentList={}
         self.properties=AllPropertyFrame(self)
-        self.after(1,self.properties.geometry,"-0+0")
         
         self.console=gpe_utils.ConsoleWindow(self)
-        self.after(1,self.console.geometry,"-0-30")
+        if sys.platform=="win32":
+            self.after(1,self.properties.geometry,"-0+0")
+            self.after(1,self.console.geometry,"-0-30")
 
         root.protocol("WM_DELETE_WINDOW", self.OnClose)
         if sys.platform=="win32":
@@ -805,7 +806,7 @@ root =tk.Tk()                             #main window
 root.tk_setPalette(background='#fff')
 root.iconbitmap(os.path.join(_mainPath,"main.ico"))
 
-root.tk.call("source", "Azure-ttk-theme/azure.tcl")
+root.tk.call("source", resource_path("Azure-ttk-theme/azure.tcl"))
 root.tk.call("set_theme", "light")
 #ttk.Style().configure("TButton",background='#f00')
 
