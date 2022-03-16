@@ -307,14 +307,14 @@ class MainAppFrame(ttk.Frame):
 
         
     def OnSetRemote(self):
-        oldAddress="dis@"
+        oldAddress="dss@"
         if self.remoteAddress!=None:
             oldAddress=self.remoteAddress
         newAddress= tksd.askstring(parent=self.root,prompt="Enter the username and host of the Raspberry Pi to run the script on\nin the format: username@192.168.1.1",title="Run script remotely",initialvalue=oldAddress)
         if newAddress==None:
             return
         if newAddress.find("@")<0:
-            tkm.showwarning("Bad address",message="Address should be in the format username@address\nOn the lab Raspberry Pis, username is usually dis, and address looks like 10.N.N.N")
+            tkm.showwarning("Bad address",message="Address should be in the format username@address\nOn the lab Raspberry Pis, username is usually dss, and address looks like 10.N.N.N")
             return
         self.remoteAddress=newAddress
         
