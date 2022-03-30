@@ -227,7 +227,7 @@ class MainAppFrame(ttk.Frame):
         self.scriptNameLabel=ttk.Label(scriptBox,text="GrovePi Python Script:")
         self.scriptStatus=ttk.Label(scriptBox,text="")
         
-        self.remoteScript=tk.IntVar(0)
+        self.remoteScript=tk.IntVar(value=0)
         self.captureScriptButton=ttk.Button(scriptBox,text="Capture script to file",command=self.OnCaptureToFile)
         self.runRemoteButton=ttk.Radiobutton(scriptBox,text="Run on real PI via SSH",command=self.OnRunRemote,var=self.remoteScript,value=1)
         self.runLocalButton=ttk.Radiobutton(scriptBox,text="Run in emulator",command=self.OnRunLocal,var=self.remoteScript,value=0)
