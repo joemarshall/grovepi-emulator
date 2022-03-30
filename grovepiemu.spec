@@ -1,14 +1,16 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+
 block_cipher = None
 
 
 a = Analysis(['grovepiemu.py'],
-             pathex=['fakegrovepi', '/Users/pszjm2/grovepi-emulator'],
+             pathex=['fakegrovepi'],
              binaries=[],
              datas=[('*.png', '.'), ('main.ico', '.'), ('testfiles/*', 'testfiles'), ('gpe_utils/pikeys', 'pikeys'), ('Azure-ttk-theme', 'Azure-ttk-theme')],
              hiddenimports=[],
              hookspath=[],
+             hooksconfig={},
              runtime_hooks=[],
              excludes=[],
              win_no_prefer_redirects=False,
@@ -17,21 +19,26 @@ a = Analysis(['grovepiemu.py'],
              noarchive=False)
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
+
 exe = EXE(pyz,
-          a.scripts,
-          a.binaries,
-          a.zipfiles,
-          a.datas,
+          a.scripts, 
           [],
+          exclude_binaries=True,
           name='grovepiemu',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          upx_exclude=[],
-          runtime_tmpdir=None,
-          console=False )
-app = BUNDLE(exe,
-             name='grovepiemu.app',
-             icon=None,
-             bundle_identifier=None)
+          console=True,
+          disable_windowed_traceback=False,
+          target_arch=None,
+          codesign_identity=None,
+          entitlements_file=None )
+coll = COLLECT(exe,
+               a.binaries,
+               a.zipfiles,
+               a.datas, 
+               strip=False,
+               upx=True,
+               upx_exclude=[],
+               name='grovepiemu')

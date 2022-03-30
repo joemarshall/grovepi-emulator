@@ -11,6 +11,9 @@ pinModes={}
 outValues={}
 DHTVals={}
 
+# map from (pin,type) to sensor name
+attached_sensors={}
+
 # check for this if your code has to know whether it is in the emulator
 IS_EMULATOR=True
 

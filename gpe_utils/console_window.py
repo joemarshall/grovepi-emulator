@@ -15,10 +15,12 @@ class ConsoleWindow(tk.Toplevel):
         clear_button=ttk.Button(self,text='clear',command=self.OnClear)
         clear_button.grid(row=1,column=0)
         self.text_box=tk.Text(self,width=80,wrap='char')
+        self.text_box.tag_config("stderr", background="white", foreground="red")
         self.text_box.grid(row=0,column=0)
         self.text_box.config(yscrollcommand=sb.set)
         sb.config(command=self.text_box.yview)        
         sys.stdout=self
+        sys.stderr.write=self.err_write
         self.protocol("WM_DELETE_WINDOW", self.OnClose)
         
     def OnClose(self,event=None):
@@ -30,6 +32,12 @@ class ConsoleWindow(tk.Toplevel):
     def write(self,txt):
         fully_scrolled_down = self.text_box.yview()[1] == 1.0
         self.text_box.insert('end',txt)
+        if fully_scrolled_down:
+            self.text_box.see("end")
+
+    def err_write(self,txt):
+        fully_scrolled_down = self.text_box.yview()[1] == 1.0
+        self.text_box.insert('end',txt,("stderr",))
         if fully_scrolled_down:
             self.text_box.see("end")
         

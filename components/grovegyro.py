@@ -10,7 +10,7 @@ class GroveGyro:
     def __init__(self,inputNum):
         self.pin=inputNum
         self.axisNames=["acc_x","acc_y","acc_z","gyro_x","gyro_y","gyro_z"]
-        
+
     def title(self):
         return "I2C-%d: Grove Six Axis Gyro"%self.pin
         

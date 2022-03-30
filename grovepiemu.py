@@ -26,6 +26,7 @@ import time
 import json
 import sensors 
 import graphs 
+import grovepi
 
 DIGI_PINS=[2,3,4,5,6,7,8]
 ANA_PINS=[0,1,2]
@@ -282,12 +283,15 @@ class MainAppFrame(ttk.Frame):
         self.root.after(50,self.update)
 
     def handle_focus(self,evt):
-        if root.tk.eval('wm stackorder '+str(self.properties)+' isabove '+str(self.console))=="0":
-            self.console.lower(self)
-            self.properties.lower(self.console)
-        else:
-            self.properties.lower(self)
-            self.console.lower(self.properties)
+        try:
+            if root.tk.eval('wm stackorder '+str(self.properties)+' isabove '+str(self.console))=="0":
+                self.console.lower(self)
+                self.properties.lower(self.console)
+            else:
+                self.properties.lower(self)
+                self.console.lower(self.properties)
+        except tk.TclError as e:
+            pass
         
         
     def OnWritePython(self,event=None):
@@ -725,23 +729,25 @@ Currently has support for the following sensors:
         self.removeComponent(*self.selectedComponent)
 
         
-    def addComponent(self,component,type):
+    def addComponent(self,component,pinType):
         pin=component.pin
-        self.removeComponent(pin,type,replacing=True)
-        self.componentList[(pin,type)]=component
+        self.removeComponent(pin,pinType,replacing=True)
+        self.componentList[(pin,pinType)]=component
+        grovepi.attached_sensors[(pin,pinType)]=type(component).__name__
         if hasattr(component,"initPropertyPage"):
-            self.properties.addSensorObject(component,type)
-        sizer=self.subSizers[(pin,type)]
+            self.properties.addSensorObject(component,pinType)
+        sizer=self.subSizers[(pin,pinType)]
         component.initSmall(sizer)
                 
-    def removeComponent(self,pin,type,replacing=False):
-        if (pin,type) in self.componentList:
-            component=self.componentList[(pin,type)]
+    def removeComponent(self,pin,pinType,replacing=False):
+        if (pin,pinType) in self.componentList:
+            component=self.componentList[(pin,pinType)]
             if hasattr(component,"onComponentDestroy"):
                 component.onComponentDestroy()
-            del(self.componentList[(pin,type)])
+            del(self.componentList[(pin,pinType)])
+            del grovepi.attached_sensors[(pin,pinType)]
             self.properties.removeSensorObject(component)
-        sizer=self.subSizers[(pin,type)]
+        sizer=self.subSizers[(pin,pinType)]
         for child in sizer.winfo_children():
             child.destroy()
         if not replacing:

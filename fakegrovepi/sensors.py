@@ -39,8 +39,16 @@ def set_pins(sensor_pin_mapping:dict):
 
 
 def _does_i2c_device_exist(addr):
-    # TODO: should check if there is one attached to the emulator
-    return True
+    if addr==0x18:
+        # check if grove6axis exists
+        for sensor_class in grovepi.attached_sensors.values():
+            if sensor_class=="GroveSixAxisAccelerometer":
+                return True
+    elif addr==0x19:
+        for sensor_class in grovepi.attached_sensors.values():
+            if sensor_class=="GroveGyro":
+                return True
+    return False
 
 # mapping from sensor to pin
 _SENSOR_PIN_MAP={}
@@ -165,7 +173,7 @@ class GyroSensor:
 
     def __init__(self):
         if not _does_i2c_device_exist(0x19):
-            raise IOError("Please connect an accelerometer board")
+            raise IOError("Please connect an accelerometer and gyro board")
 
     def get_xyz(self):
         """ Get the rotation of the device
