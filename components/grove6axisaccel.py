@@ -11,6 +11,7 @@ class GroveSixAxisAccelerometer:
     def __init__(self,inputNum):
         self.pin=inputNum
         self.axisNames=["acc_x","acc_y","acc_z","mag_x","mag_y","mag_z"]
+        self.formatString="{sensor:4s}: {x: 7.2f} {y: 7.2f} {z: 7.2f}"
         
     def title(self):
         return "I2C-%d: Grove Six Axis Accel/Magnetometer"%self.pin
@@ -22,9 +23,9 @@ class GroveSixAxisAccelerometer:
     def initSmall(self,parent):
         self.titleLabel=ttk.Label(parent,text=self.title())
         self.titleLabel.grid()
-        self.labelM=ttk.Label(parent,text="Mag: +00.000 +00.000 +00.000",font="Courier")
+        self.labelM=ttk.Label(parent,text=self.formatString.format(sensor="Mag",x=0,y=0,z=0),font="courier")
+        self.labelA=ttk.Label(parent,text=self.formatString.format(sensor="Acc",x=0,y=0,z=0),font="courier")
         self.labelM.grid()
-        self.labelA=ttk.Label(parent,text="Acc: +00.000 +00.000 +00.000",font="Courier")
         self.labelA.grid()
         self.setValue(0,0.0)
         self.setValue(1,10.0)
@@ -64,10 +65,13 @@ class GroveSixAxisAccelerometer:
         properties=[self.axProp,self.ayProp,self.azProp,self.mxProp,self.myProp,self.mzProp]
         if axisIndex<3:
             grove6axis.accVals[axisIndex]=value
+            x,y,z=grove6axis.accVals
+            self.labelA.config(text=self.formatString.format(sensor="Acc",x=x,y=y,z=z))
             self.labelA.config(text="Acc: {: 7.3f} {: 7.3f} {: 7.3f}".format(*grove6axis.accVals))
         else:
             grove6axis.magVals[axisIndex-3]=value
-            self.labelM.config(text="Mag: {: 7.3f} {: 7.3f} {: 7.3f}".format(*grove6axis.magVals))
+            x,y,z=grove6axis.magVals
+            self.labelM.config(text=self.formatString.format(sensor="Mag",x=x,y=y,z=z))
         properties[axisIndex].SetValue(value)
         
     def getCSVCode(self):

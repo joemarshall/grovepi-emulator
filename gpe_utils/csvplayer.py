@@ -19,8 +19,8 @@ class CSVPlayer:
                     line[key]=float(val)
                     if line[key].is_integer():
                         line[key]=int(val)
-                except ValueError:
-                    None
+                except (ValueError,TypeError):
+                    pass
             self.allLines.append(line)
         self.timeColumn=None
         self.curPos=0

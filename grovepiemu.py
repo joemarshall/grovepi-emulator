@@ -648,7 +648,12 @@ Currently has support for the following sensors:
             return None
         if file.lower().startswith("http://"):
             return file
-        return os.path.relpath(file,os.path.dirname(os.path.abspath(name)))
+        try:
+            return os.path.relpath(file,os.path.dirname(os.path.abspath(name)))
+        except ValueError:
+            # if they're on a different drive the above fails and need 
+            # an absolute path
+            return file
             
     def saveSettingsIni(self,name):
         try:

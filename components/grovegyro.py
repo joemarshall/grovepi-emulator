@@ -10,6 +10,7 @@ class GroveGyro:
     def __init__(self,inputNum):
         self.pin=inputNum
         self.axisNames=["acc_x","acc_y","acc_z","gyro_x","gyro_y","gyro_z"]
+        self.formatString="{sensor:4s}: {x: 7.2f} {y: 7.2f} {z: 7.2f}"
 
     def title(self):
         return "I2C-%d: Grove Six Axis Gyro"%self.pin
@@ -21,9 +22,9 @@ class GroveGyro:
     def initSmall(self,parent):
         self.titleLabel=ttk.Label(parent,text=self.title())
         self.titleLabel.grid()
-        self.labelG=ttk.Label(parent,text="Gyro: +00.000 +00.000 +00.000",font="Courier")
+        self.labelG=ttk.Label(parent,text=self.formatString.format(sensor="Gyro",x=0,y=0,z=0),font="courier")
+        self.labelA=ttk.Label(parent,text=self.formatString.format(sensor="Acc",x=0,y=0,z=0),font="courier")
         self.labelG.grid()
-        self.labelA=ttk.Label(parent,text=" Acc: +00.000 +00.000 +00.000",font="Courier")
         self.labelA.grid()
         
     def initPropertyPage(self,parent):
@@ -60,10 +61,12 @@ class GroveGyro:
         properties=[self.axProp,self.ayProp,self.azProp,self.gxProp,self.gyProp,self.gzProp]
         if axisIndex<3:
             grovegyro.accVals[axisIndex]=value
-            self.labelA.config(text="Acc: {: 7.3f} {: 7.3f} {: 7.3f}".format(*grovegyro.accVals))
+            x,y,z=grovegyro.accVals
+            self.labelA.config(text=self.formatString.format(sensor="Acc",x=x,y=y,z=z))
         else:
             grovegyro.gyroVals[axisIndex-3]=value
-            self.labelG.config(text="Gyr: {: 7.3f} {: 7.3f} {: 7.3f}".format(*grovegyro.gyroVals))
+            x,y,z=grovegyro.gyroVals
+            self.labelG.config(text=self.formatString.format(sensor="Gyro",x=x,y=y,z=z))
         properties[axisIndex].SetValue(value)
         
     def getCSVCode(self):
