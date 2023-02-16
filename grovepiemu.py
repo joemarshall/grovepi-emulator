@@ -5,6 +5,7 @@
 
 import os    
 import sys
+import version
 from idlelib.tooltip import Hovertip
 
 if getattr( sys, 'frozen', False ) :
@@ -270,7 +271,7 @@ class MainAppFrame(ttk.Frame):
             self.settingsFile=sys.argv[1]
             self.loadSettingsIni(sys.argv[1])
             if self.settingsFile!=None:
-               self.root.wm_title("GrovePi Emulator - %s"%self.settingsFile)
+               self.root.wm_title(f"GrovePi Emulator {version.__version__}- {self.settingsFile}")
         else:
             self.loadSettingsIni(os.path.join(_mainPath,"grovepiemu.ini"),True)
             
@@ -281,6 +282,9 @@ class MainAppFrame(ttk.Frame):
         for col_num in range(3):
             self.columnconfigure(col_num, weight=1)
         self.root.after(50,self.update)
+        remote_addr=os.environ.get("GROVEPI_REMOTE_ADDR",None)
+        if  remote_addr is not None:
+            self.remoteAddress=remote_addr
 
     def handle_focus(self,evt):
         try:
@@ -556,7 +560,7 @@ class MainAppFrame(ttk.Frame):
         if not filename:
             return
         self.settingsFile=filename
-        self.root.wm_title("GrovePi Emulator - %s"%self.settingsFile)
+        self.root.wm_title(f"GrovePi Emulator {version.__version__}- {self.settingsFile}")
         self.saveSettingsIni(self.settingsFile)
     
     
@@ -570,7 +574,7 @@ class MainAppFrame(ttk.Frame):
         if not filename:
             return
         self.settingsFile=filename
-        self.root.wm_title("GrovePi Emulator - %s"%self.settingsFile)
+        self.root.wm_title(f"GrovePi Emulator {version.__version__}- {self.settingsFile}")
         self.loadSettingsIni(self.settingsFile)
         
     def OnAbout(self):
@@ -581,7 +585,7 @@ Currently has support for the following sensors:
         for c in components.allSensors:
             description+=c.classDescription()+"\n"
         description+="\nBy Joe Marshall\nhttp://www.cs.nott.ac.uk/~pszjm2\n\nDo what you want with the code. Any questions, email joe.marshall@nottingham.ac.uk "
-        tkm.showinfo("Grove PI Emulation Environment 3.1",message=description)
+        tkm.showinfo(f"Grove PI Emulation Environment {version.__version__}",message=description)
 
     
     def loadSettingsIni(self,name,fromIni=False):
@@ -808,10 +812,13 @@ Currently has support for the following sensors:
         
         
     def OnClose(self,event=None):
+        self.console.OnClose()
         if self.scriptRunner!=None and self.scriptRunner.running():
             self.scriptRunner.stop()
         self.saveSettingsIni(os.path.join(_mainPath,"grovepiemu.ini"))
         self.root.quit()
+
+
 
 root =tk.Tk()                             #main window
 root.tk_setPalette(background='#fff')
@@ -821,9 +828,15 @@ root.tk.call("source", resource_path("Azure-ttk-theme/azure.tcl"))
 root.tk.call("set_theme", "light")
 #ttk.Style().configure("TButton",background='#f00')
 
-top = MainAppFrame(root,"GrovePi Emulator - <untitled>")
+top = MainAppFrame(root,f"GrovePi Emulator {version.__version__} - <untitled>")
 
 root.geometry('+0+0')
+
+def tk_exception_callback(self, exc, val, tb):
+    top.OnClose()
+
+# make tk raise exceptions properly
+tk.Tk.report_callback_exception=tk_exception_callback
 
 try:
     root.mainloop()

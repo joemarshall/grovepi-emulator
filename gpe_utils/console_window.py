@@ -5,6 +5,7 @@ import os
 class ConsoleWindow(tk.Toplevel):
     def __init__(self,parent):
         self.old_stdout=sys.stdout
+        self.old_err_write=sys.stderr.write
         tk.Toplevel.__init__(self)
         if sys.platform=="win32":
             self.attributes('-toolwindow', True)
@@ -14,7 +15,7 @@ class ConsoleWindow(tk.Toplevel):
         sb.grid(row=0,column=1,sticky=tk.NSEW)
         clear_button=ttk.Button(self,text='clear',command=self.OnClear)
         clear_button.grid(row=1,column=0)
-        self.text_box=tk.Text(self,width=80,wrap='char')
+        self.text_box=tk.Text(self,width=80,wrap='char',font=("courier",10))
         self.text_box.tag_config("stderr", background="white", foreground="red")
         self.text_box.grid(row=0,column=0)
         self.text_box.config(yscrollcommand=sb.set)
@@ -24,6 +25,8 @@ class ConsoleWindow(tk.Toplevel):
         self.protocol("WM_DELETE_WINDOW", self.OnClose)
         
     def OnClose(self,event=None):
+        sys.stdout=self.old_stdout
+        sys.stderr.write=self.old_err_write
         return False
 
     def OnClear(self,event=None):
