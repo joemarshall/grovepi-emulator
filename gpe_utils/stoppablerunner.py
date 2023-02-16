@@ -2,6 +2,7 @@
 import bdb
 import os    
 import sys,threading
+import traceback
 
 class _ThreadPrinter:
     def __init__(self):
@@ -27,20 +28,28 @@ class _ThreadPrinter:
         self.originalStdout.flush()
         for file in list(self.saveThreads.values()):
             file.flush()
-            
-_prt = _ThreadPrinter()
+_prt = None
             
 class StoppableRunner(bdb.Bdb):
     def __init__(self,name,captureFile=None):
+        global _prt
+        if _prt is None:
+            _prt=_ThreadPrinter()
         bdb.Bdb.__init__(self)
         self._stop=False
         self.captureFile=captureFile
         self.captureID=None
-        print("---------------- LAUNCHING PYTHON SCRIPT IN EMULATOR ----------------")
-        
-        
+        self.banner_print("LAUNCHING PYTHON SCRIPT IN EMULATOR")    
         self.thread=self._runFile(name)
-    
+
+    def banner_print(self,txt):
+        banner_total=80
+        banner_sides=banner_total-len(txt)-2
+        dash_left=banner_sides//2
+        dash_right=banner_total-dash_left - len(txt)-2
+        print(f"{'-'*dash_left} {txt} {'-'*dash_right}")
+
+
     def dispatch_line(self,frame):
         bdb.Bdb.dispatch_line(self,frame)
         if self._stop:
@@ -60,13 +69,19 @@ class StoppableRunner(bdb.Bdb):
         self._payload(name)
         
     def _payload(self,name):
-        self.run('exec(open(\'%s\').read())'%(name.replace('\\','\\\\')))
-#        self.run('execfile(\'%s\')'%(name.replace('\\','\\\\')))
+        try:
+            self.run('exec(open(\'%s\').read())'%(name.replace('\\','\\\\')))
+        except BaseException as e:
+            sys.stderr.write(traceback.format_exc())
+        finally:
+            if not self._stop:
+                self.banner_print("FINISHED")
         
     def stop(self):
         global _prt
         self._stop=True
         _prt.remove(self.captureID)
+        self.banner_print("STOPPED")
         
     def running(self):
         return self.thread.is_alive()
