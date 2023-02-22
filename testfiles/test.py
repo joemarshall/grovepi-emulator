@@ -1,20 +1,11 @@
+import sensors,time
 
-
-import grovepi
-import grovelcd
-import time
-
-grovepi.pinMode(3,"OUTPUT")
-
-print("time,ultra,analog,digital")
+sensor_pins={ "ultrasonic":6 } 
+# ultrasound on digital pin 6
+sensors.set_pins(sensor_pins)
+print("WOO")
 while True:
-    ultra=grovepi.ultrasonicRead(2)
-    ana=grovepi.analogRead(0)
-    digi=grovepi.digitalRead(4)
-    timestamp=time.time()
-    grovepi.analogWrite(3,ultra/2)
-    grovelcd.setRGB(ultra/2,200-ultra/2,0)
-    txt="%d - %d - %d\n wooo yay"%(ultra,digi, ana)
-    grovelcd.setText(txt,False)
-    print("%f,%d,%d,%d"%(timestamp,ultra,ana,digi))
+    d=sensors.ultrasonic.get_level()
+    print(d) 
+    # Distance in cm
     time.sleep(0.1)
