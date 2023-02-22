@@ -19,7 +19,7 @@ def main(release:str=typer.Option("",help="Update version number and push a rele
     import version
 
     cmd=["pyinstaller","-y","--add-data","*.png;.","--add-data","main.ico;.","grovepiemu.py","--add-data","testfiles/*;testfiles","--add-data","gpe_utils/pikeys;pikeys","-p","fakegrovepi","--add-data","Azure-ttk-theme;Azure-ttk-theme","--hidden-import","sensors","--hidden-import","graphs","--hidden-import","filters","--hidden-import","tkinter"]
-
+    cmd= [s.replace(';',os.pathsep) for s in cmd]
     platform=sys.platform
     if platform=="darwin":
         print(f"pyinstaller command for {platform} (macos):")
