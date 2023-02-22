@@ -70,10 +70,12 @@ class RemoteRunner:
         async for line in strm:
             fn(line.decode('utf-8'),**argv)
 
-    async def _echo_subprocess_output(self,cmdRun,fn=print,argv={"end":''}):
-        #print("launch cmd:",cmdRun)
+    async def _echo_subprocess_output(self,cmdRun,fn=print,argv={"end":''},override_stop=False):
+#        print("launch cmd:",cmdRun)
         self.process=await asyncio.create_subprocess_exec(*cmdRun,stdin=None,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        coroutines=[self._consume_stream_and_apply(self.process.stderr,fn,argv),self._consume_stream_and_apply(self.process.stdout,fn,argv),self.process.wait(),self._stop_future]
+        coroutines=[self._consume_stream_and_apply(self.process.stderr,fn,argv),self._consume_stream_and_apply(self.process.stdout,fn,argv),self.process.wait()]
+        if not override_stop:
+            coroutines.append(self._stop_future)
         terminating=False
         for coro in asyncio.as_completed(coroutines):
             finished_result=await coro
@@ -158,15 +160,14 @@ class RemoteRunner:
                 cmdCopyBack=[_PUTTY_DIR+ os.sep+"pscp.exe","-i",_PUTTY_KEY,*host_key_parts,"%s:%s"%(self.address,os.path.basename(self.captureFile)),self.captureFile]
             else:
                 cmdRun=[_PUTTY_DIR+ os.sep+'plink.exe','-i',f"{_PUTTY_KEY}",*host_key_parts,self.address,"-t","python %s"%(os.path.basename(codeName))]
-#                cmdRun=_PUTTY_DIR+ os.sep+'plink -i \"%s\" %s %s -t "python %s"'%(_PUTTY_KEY,host_key_str   ,self.address,os.path.basename(codeName))
                 
         else:
             cmdCopy=["scp","-i",_SSH_KEY,"-o","UserKnownHostsFile=/dev/null","-o","StrictHostKeyChecking=no",codeName,self.address+":"+os.path.basename(codeName)]
             if self.captureFile:
-                cmdRun=["ssh","-i",_SSH_KEY,self.address,"-o","UserKnownHostsFile=/dev/null","-o","StrictHostKeyChecking=no","stdbuf -o 0 python %s | tee %s"%(os.path.basename(codeName),os.path.basename(self.captureFile))]
+                cmdRun=["ssh","-i",_SSH_KEY,self.address,"-o","UserKnownHostsFile=/dev/null","-o","StrictHostKeyChecking=no","stdbuf -o 0 python -u %s | tee %s"%(os.path.basename(codeName),os.path.basename(self.captureFile))]
                 cmdCopyBack=["scp","-i",_SSH_KEY,"-o","UserKnownHostsFile=/dev/null","-o","StrictHostKeyChecking=no",self.address+":"+os.path.basename(self.captureFile),self.captureFile]
             else:
-                cmdRun=["ssh","-i",_SSH_KEY,self.address,"-o","UserKnownHostsFile=/dev/null","-o","StrictHostKeyChecking=no","stdbuf -o 0 python %s "%os.path.basename(codeName)]
+                cmdRun=["ssh","-i",_SSH_KEY,self.address,"-o","UserKnownHostsFile=/dev/null","-o","StrictHostKeyChecking=no","stdbuf -o 0 python -u %s "%os.path.basename(codeName)]
                 
             # fix key permission for openssh or else it will fail to run
             os.chmod(_SSH_KEY, stat.S_IREAD)
@@ -176,13 +177,15 @@ class RemoteRunner:
         if retVal==0:
             self.banner_print("LAUNCHING")
             if self.captureFile!=None:
-                retVal=await self._echo_subprocess_output(cmdRun)
-                if retVal==0:
-                    retVal=await self._echo_subprocess_output(cmdCopyBack)
+                try:
+                    retVal=await self._echo_subprocess_output(cmdRun)
+                    if retVal!=0:
+                        print("Failed to run python")
+                finally:
+                    self.banner_print("COPYING OUTPUT")
+                    retVal=await self._echo_subprocess_output(cmdCopyBack,override_stop=True)
                     if retVal!=0:
                         print("Failed to copy output back to PC")
-                else:
-                    print("Failed to run python")
             else:
                 retVal=await self._echo_subprocess_output(cmdRun)
                 if retVal!=0:
