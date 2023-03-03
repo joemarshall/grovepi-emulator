@@ -4,8 +4,7 @@ import os
 import shutil
 import typer
 
-
-def main(release:str=typer.Option("",help="Update version number and push a release to github",metavar="VERSION")):
+def main(release:str=typer.Option("",help="Update version number and push a release to github",metavar="VERSION"),run_test:bool = typer.Option(True,help="Run grovepiemulator before uploading release")):
     release=release.strip("v")
     if len(release)>0:
         # update version
@@ -14,7 +13,6 @@ def main(release:str=typer.Option("",help="Update version number and push a rele
             version_file.write(f"__version__='{release}'")
         subprocess.run(["git","add","version.py"])
         subprocess.run(["git","commit","-m","Update version"])
-
 
     import version
 
@@ -38,10 +36,11 @@ def main(release:str=typer.Option("",help="Update version number and push a rele
 
         zip_name=shutil.make_archive(f"grovepiemu-{version.__version__}-{platform}",format="zip",base_dir="grovepiemu")
         os.chdir("grovepiemu")
-        if platform=="windows":
-            subprocess.run("grovepiemu.exe")
-        else:
-            subprocess.run("grovepiemu")
+        if run_test:
+            if platform=="windows":
+                subprocess.run("grovepiemu.exe")
+            else:
+                subprocess.run("grovepiemu")
         os.chdir("..")
         if len(release)>0:
             tag=f"v{release}"
@@ -51,7 +50,7 @@ def main(release:str=typer.Option("",help="Update version number and push a rele
                 print(f"Creating release {tag}")
                 subprocess.check_call(["gh","release","create",tag])
             print("Uploading asset to github")
-            subprocess.check_call(["gh","release","upload",tag,zip_name])
+            subprocess.check_call(["gh","release","upload",tag,zip_name,"--clobber"])
             print("Successfully made release")
     else:
         print("Failed to build, error:",proc.returncode)
