@@ -23,17 +23,32 @@ jobs:
     - uses: actions/setup-python@v4
       with:
         python-version: '3.10.9' 
-    - run: echo __version__=\'${{github.event.inputs.new_ver}}\' > version.py
     - run: pip install -r requirements.txt
+    - run: echo __version__=\'${{github.event.inputs.new_ver}}\' > version.py
+    - run: python makeexecutable.py --no-run-test
+    - uses: actions/upload-artifact@v3
+      with:
+        name: built
+        path: dist/*.zip
+ release:
+   runs-on: ubuntu-latest
+   needs: build
+   steps:
+    - uses: actions/checkout@v3
+    - uses: actions/download-artifact@v3
+      with:
+        name: built
+        path: dist
+    - run: echo __version__=\'${{github.event.inputs.new_ver}}\' > version.py
     - run: |
         git config --global user.name "version update bot"
         git config --global user.email "username@users.noreply.github.com"
         git commit -a -m "update version"
         git push
-    - run: python makeexecutable.py --no-run-test
     - uses: ncipollo/release-action@v1
       with:
         artifacts: "dist/*.zip"
         body: ${{github.event.inputs.release_body}}
         allowUpdates: true
         tag: ${{github.event.inputs.new_ver}}
+
