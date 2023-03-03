@@ -1,0 +1,33 @@
+name: Releases
+
+on: 
+  workflow_dispatch:
+    inputs:
+      new_ver:
+        description: "New version number"
+        required: true
+        type: string
+      release_body:
+        description: "Text of release"
+        required: false
+        default: ""
+        type: string
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: ["windows-latest","macos-latest"]
+    runs-on: ${matrix.os}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10.9' 
+    - run: pip install requirements.txt
+    - run: python make_executable.py --no-run-test
+    - uses: ncipollo/release-action@v1
+      with:
+        artifacts: "dist/*.zip"
+        body: ${{github.event.inputs.release_body}}
+        allowUpdates: true
+        tag: ${{github.event.inputs.new_ver}}
