@@ -17,11 +17,11 @@ def main(release:str=typer.Option("",help="Update version number and push a rele
     import version
 
     cmd=["pyinstaller","-y","--add-data","*.png;.","--add-data","main.ico;.","grovepiemu.py","--add-data","testfiles/*;testfiles","--add-data","gpe_utils/pikeys;pikeys","-p","fakegrovepi","--add-data","Azure-ttk-theme;Azure-ttk-theme","--hidden-import","sensors","--hidden-import","graphs","--hidden-import","filters","--hidden-import","tkinter"]
-
+    cmd= [s.replace(';',os.pathsep) for s in cmd]
     platform=sys.platform
     if platform=="darwin":
         print(f"pyinstaller command for {platform} (macos):")
-        cmd.extend(["--onefile","--noconsole"])
+        cmd.extend(["--onefile","--noconsole",'--distpath','dist/grovepiemu'])
         platform="mac"
     elif platform=="win32":
         print(f"pyinstaller command for {platform} (windows):")
@@ -40,7 +40,7 @@ def main(release:str=typer.Option("",help="Update version number and push a rele
             if platform=="windows":
                 subprocess.run("grovepiemu.exe")
             else:
-                subprocess.run("grovepiemu")
+                subprocess.run("./grovepiemu")
         os.chdir("..")
         if len(release)>0:
             tag=f"v{release}"
