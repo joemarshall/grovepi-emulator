@@ -24,7 +24,7 @@ jobs:
       with:
         python-version: '3.10.9' 
     - run: pip install -r requirements.txt
-    - run: echo __version__=\'${{github.event.inputs.new_ver}}\' > version.py
+    - run: echo __version__=\"${{github.event.inputs.new_ver}}\" > version.py
     - run: python makeexecutable.py --no-run-test
     - uses: actions/upload-artifact@v3
       with:
@@ -39,7 +39,7 @@ jobs:
       with:
         name: built
         path: dist
-    - run: echo __version__=\'${{github.event.inputs.new_ver}}\' > version.py
+    - run: echo __version__=\"${{github.event.inputs.new_ver}}\" > version.py
     - run: |
         git config --global user.name "version update bot"
         git config --global user.email "username@users.noreply.github.com"
