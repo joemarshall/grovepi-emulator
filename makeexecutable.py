@@ -21,7 +21,7 @@ def main(release:str=typer.Option("",help="Update version number and push a rele
     platform=sys.platform
     if platform=="darwin":
         print(f"pyinstaller command for {platform} (macos):")
-        cmd.extend(["--onefile","--noconsole",'--distpath','dist/grovepiemu'])
+        cmd.extend(["--onefile","--noconsole",'--distpath','dist/grovepiemu','--target-arch','universal2'])
         platform="mac"
     elif platform=="win32":
         print(f"pyinstaller command for {platform} (windows):")
