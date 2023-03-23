@@ -24,10 +24,28 @@ jobs:
       with:
         python-version: '3.10.9' 
     - run: pip install -r requirements.txt
-    - run: python make_executable.py --no-run-test
+    - run: echo __version__=\"${{github.event.inputs.new_ver}}\" > version.py
+      shell: bash
+    - run: python makeexecutable.py --no-run-test
+    - uses: actions/upload-artifact@v3
+      with:
+        name: built
+        path: dist/*.zip
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/download-artifact@v3
+      with:
+        name: built
+        path: dist
+    - run: echo __version__=\"${{github.event.inputs.new_ver}}\" > version.py
+    - uses: EndBug/add-and-commit@v9
     - uses: ncipollo/release-action@v1
       with:
         artifacts: "dist/*.zip"
         body: ${{github.event.inputs.release_body}}
         allowUpdates: true
         tag: ${{github.event.inputs.new_ver}}
+
