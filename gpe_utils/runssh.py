@@ -156,7 +156,7 @@ class RemoteRunner:
                 
             cmdCopy=[_PUTTY_DIR+ os.sep+"pscp.exe","-i",_PUTTY_KEY,*host_key_parts,codeName,"%s:%s"%(self.address,os.path.basename(codeName))]
             if self.captureFile:
-                cmdRun=[_PUTTY_DIR+ os.sep+'plink.exe','-i',_PUTTY_KEY,*host_key_parts,self.address,"-t","stdbuf -o 0 python %s |tee %s"%(os.path.basename(codeName),os.path.basename(self.captureFile))]
+                cmdRun=[_PUTTY_DIR+ os.sep+'plink.exe','-i',_PUTTY_KEY,*host_key_parts,self.address,"-t","stdbuf -o 0 python -u %s |tee %s"%(os.path.basename(codeName),os.path.basename(self.captureFile))]
                 cmdCopyBack=[_PUTTY_DIR+ os.sep+"pscp.exe","-i",_PUTTY_KEY,*host_key_parts,"%s:%s"%(self.address,os.path.basename(self.captureFile)),self.captureFile]
             else:
                 cmdRun=[_PUTTY_DIR+ os.sep+'plink.exe','-i',f"{_PUTTY_KEY}",*host_key_parts,self.address,"-t","python %s"%(os.path.basename(codeName))]
@@ -178,7 +178,7 @@ class RemoteRunner:
             self.banner_print("LAUNCHING")
             if self.captureFile!=None:
                 try:
-                    retVal=await self._echo_subprocess_output(cmdRun)
+                    retVal=await self._echo_subprocess_output(cmdRun,fn=sys.stdout.write,argv={})
                     if retVal!=0:
                         print("Failed to run python")
                 finally:

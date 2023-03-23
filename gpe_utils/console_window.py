@@ -1,7 +1,8 @@
-from .tkimports import *
+if __name__=="__main__":
+    from tkimports import *
+else:
+    from .tkimports import *
 import sys
-import queue
-
 
 class ConsoleWindow(tk.Toplevel):
     def __init__(self,parent):
@@ -23,8 +24,7 @@ class ConsoleWindow(tk.Toplevel):
         sys.stdout=self
         sys.stderr.write=self.err_write
         self.protocol("WM_DELETE_WINDOW", self.OnClose)
-        self.writes=queue.Queue()
-        self.waiting_write=True
+        self.writes=[]
         self.timer=self.after(100,self.handle_writes)
         
     def OnClose(self,event=None):
@@ -37,25 +37,27 @@ class ConsoleWindow(tk.Toplevel):
         self.text_box.delete(1.0,tk.END)
 
     def write(self,txt):
-        self.writes.put(("stdout",txt))
+        if len(txt)>0:
+            self.writes.append((None,txt))
 
     def err_write(self,txt):
-        self.writes.put(("stderr",txt))
+        if len(txt)>0:
+            self.writes.append(("stderr",txt))
 
     def handle_writes(self):
         fully_scrolled_down = self.text_box.yview()[1]>0.999 
         done_insert=False
         currentTag=None
         allText=""
-        while not self.writes.empty():
-            (stream,txt)=self.writes.get()
-            if currentTag!=stream:
+        new_writes,self.writes=self.writes,[] # because of global interpreter lock this should be thread safe
+        for (tag,txt) in new_writes:
+            if currentTag!=tag:
                 # change from stdout to stderr, need to insert
                 if len(allText)>0:
                     self.text_box.insert('end',allText,(currentTag,))
                     done_insert=True
                 allText=""
-                currentTag=stream
+                currentTag=tag
                 allText=txt
             else:
                 allText+=txt
@@ -64,9 +66,40 @@ class ConsoleWindow(tk.Toplevel):
             done_insert=True
         if fully_scrolled_down and done_insert:
             self.text_box.see("end")
-        self.timer=self.after(100,self.handle_writes)
+        self.timer=self.after(50,self.handle_writes)
         
     def flush(self):
         self.old_stdout.flush()
-        pass
+
+if __name__=="__main__":
+    # test performance of console window
+    root =tk.Tk()                             #main window
+    root.tk_setPalette(background='#fff')
+    import time,threading
+
+
+
+    class TestFrame(ttk.Frame):
+
+        def __init__(self,parent,timestep=0.001):
+            super().__init__(parent)
+            self.timestep=timestep
+            self.console=ConsoleWindow(self)
+            self.start_time=time.time()
+            self.count=0
+            threading.Thread(target=self.test_fn,daemon=True).start()
+
+        def test_fn(self):
+            import timeit
+            print(timeit.timeit("print('WOO')",number=1000000))
+            self.after(1000,sys.exit,0)
+
+
+    import cProfile
+    top = TestFrame(root)
+    try:
+        root.mainloop()
+    except KeyboardInterrupt:
+        top.OnClose()
+
 

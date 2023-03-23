@@ -77,12 +77,37 @@ class AllPropertyFrame(tk.Toplevel):
     def OnClose(self,event=None):
         return False
 
+# wrap tkinter config function so we can call it multiple times with the same value and only update the control
+# on changes. Wrap a whole frame worth of children
+def wrap_all_children (wid) :
+    _list = wid.winfo_children()
+
+    for item in _list :
+        wrap_config(item)
+        wrap_all_children(item)
+    return _list
+
+# wrap tkinter config function for one control
+def wrap_config(control):
+        control.old_config=control.config
+        control.cached_config={}
+        def new_config(self,**argv):
+            c=self.cached_config
+            changes={}
+            for k,v in argv.items():
+                if k not in c or c[k]!=v:
+                   changes[k]=v
+            if len(changes)>0:
+                self.cached_config.update(changes)
+                self.old_config(**changes)
+        control.config=new_config.__get__(control)
+
 
 def _make_button(parent,imageOrText,fn):
     if type(imageOrText)==tuple:
         img=tk.PhotoImage(file=resource_path(imageOrText[1]))
         button=ttk.Button(parent,image=img,text=imageOrText[0],command=fn)
-        button.img=img # avoid image being garbage collected
+        button.img=img # avoid image being garbage collected        
         return button,imageOrText[0]
     else:
         button=ttk.Button(parent,text=imageOrText,command=fn)
@@ -285,6 +310,7 @@ class MainAppFrame(ttk.Frame):
         remote_addr=os.environ.get("GROVEPI_REMOTE_ADDR",None)
         if  remote_addr is not None:
             self.remoteAddress=remote_addr
+        wrap_all_children(self)
 
     def handle_focus(self,evt):
         try:
@@ -785,12 +811,9 @@ Currently has support for the following sensors:
         self.captureScriptButton.config(text="Capture script to file")
         self.captureScriptButton.config(style="TButton")                
 
-        
-        if self.scriptRunner!=None:
-            self.scriptButtons['>'].config(style="TButton")
+        if self.scriptRunner!=None:            
             if self.scriptRunner.running():
                 self.scriptButtons['>'].config(style="Accent.TButton")
-                self.scriptStatus.config(text="Running")
                 if self.remoteScript.get()==1:
                     self.scriptStatus.config(text="Run at: %s"%self.remoteAddress)                
                 else:
@@ -799,11 +822,13 @@ Currently has support for the following sensors:
                     self.captureScriptButton.config(style="Accent.TButton")
                     self.captureScriptButton.config(text="Stop capturing")                
             else:
+                self.scriptButtons['>'].config(style="TButton")
                 if self.remoteScript.get()==1:
                     self.scriptStatus.config(text="Stopped: %s"%self.remoteAddress)                
                 else:
                     self.scriptStatus.config(text="Stopped")                
         else:
+            self.scriptButtons['>'].config(style="TButton")
             if self.remoteScript.get()==1:
                 self.scriptStatus.config(text="Stopped: %s"%self.remoteAddress)                
             else:
