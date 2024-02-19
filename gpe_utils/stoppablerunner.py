@@ -36,6 +36,7 @@ class StoppableRunner(bdb.Bdb):
         if _prt is None:
             _prt=_ThreadPrinter()
         bdb.Bdb.__init__(self)
+        sys.path.append(os.path.dirname(name))
         self._stop=False
         self.captureFile=captureFile
         self.captureID=None
