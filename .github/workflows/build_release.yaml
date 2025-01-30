@@ -22,7 +22,7 @@ jobs:
     - uses: actions/checkout@v3
     - uses: actions/setup-python@v4
       with:
-        python-version: '3.11' 
+        python-version: '3.12' 
     - run: pip install -r requirements.txt
     - run: echo __version__=\"${{github.event.inputs.new_ver}}\" > version.py
       shell: bash

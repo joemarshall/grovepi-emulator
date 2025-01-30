@@ -1,2 +1,2 @@
-pyinstaller>=4.8
+pyinstaller>=6.11.1
 typer>=0.7.0
