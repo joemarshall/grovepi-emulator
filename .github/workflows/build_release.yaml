@@ -43,7 +43,7 @@ jobs:
     - uses: EndBug/add-and-commit@v9
     - uses: ncipollo/release-action@v1
       with:
-        artifacts: "dist/*.zip"
+        artifacts: "dist/*/*.zip"
         body: ${{github.event.inputs.release_body}}
         allowUpdates: true
         tag: ${{github.event.inputs.new_ver}}
