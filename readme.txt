@@ -1,9 +1,9 @@
-GrovePi Emulation Environment 2.0
+GrovePi Emulation Environment
 ---------------------------------
 This runs python scripts in an emulation environment that 
 pretends to be a Raspberry PI with a Grove sensor board 
-attached. I mainly created this for use during the G54MRT
-Mixed Reality Technologies course at University of Nottingham.
+attached. I mainly created this for use during the Comp4104 
+Designing Sensor Based System module at University of Nottingham.
 
 As such I've only implemented components that were in our
 box of tricks. If you want new components integrating, it 
@@ -35,13 +35,13 @@ http://www.dexterindustries.com/grovepi/
 See here for details of grove sensors
 http://www.seeedstudio.com/wiki/Grove_System
 
-This is public domain code, written by Joe Marshall 2015.
+This is public domain code, written by Joe Marshall 2015-2025.
 joe.marshall@nottingham.ac.uk
 
-To run the emulator, just extract all these files, go to the folder
-and run either startemulatorwin.bat (Windows) or grovepiemu.py (other platforms)
+To run the emulator, download the latest release from the releases tab.
 
-You need python 2.7. Should work on 32 or 64 bit Windows, I see no reason it shouldn't work on Mac or Linux.
+If you want to run it in your own python installation, just clone the
+github and run grovepiemu.py. You need python 3.11 or later.
 
 
 
