@@ -23,10 +23,10 @@ class GroveSixAxisAccelerometer:
     def initSmall(self,parent):
         self.titleLabel=ttk.Label(parent,text=self.title())
         self.titleLabel.grid()
-        self.labelM=ttk.Label(parent,text=self.formatString.format(sensor="Mag",x=0,y=0,z=0),font="courier")
         self.labelA=ttk.Label(parent,text=self.formatString.format(sensor="Acc",x=0,y=0,z=0),font="courier")
-        self.labelM.grid()
+        self.labelM=ttk.Label(parent,text=self.formatString.format(sensor="Mag",x=0,y=0,z=0),font="courier")
         self.labelA.grid()
+        self.labelM.grid()
         self.setValue(0,0.0)
         self.setValue(1,10.0)
         self.setValue(2,-5.0)
@@ -67,7 +67,6 @@ class GroveSixAxisAccelerometer:
             grove6axis.accVals[axisIndex]=value
             x,y,z=grove6axis.accVals
             self.labelA.config(text=self.formatString.format(sensor="Acc",x=x,y=y,z=z))
-            self.labelA.config(text="Acc: {: 7.3f} {: 7.3f} {: 7.3f}".format(*grove6axis.accVals))
         else:
             grove6axis.magVals[axisIndex-3]=value
             x,y,z=grove6axis.magVals

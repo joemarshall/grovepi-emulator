@@ -15,9 +15,10 @@ from .grove6axisaccel import *
 from .grovenfctagmodule import *
 from .grovedht import *
 from .grovegyro import *
+from .grove9axisimu import *
 
 digitalSensors=[GenericDigital,GroveButton,GrovePIR,GroveUltrasonic,GroveTilt,GroveDHT]
 analogSensors=[GenericAnalog,GroveTemperature,GroveLight,GroveSound,GroveLoudness]
 digitalOutputs=[GroveLED]
-i2cConnections=[GroveLCDDisplay,GroveSixAxisAccelerometer,GroveNFCTagModule,GroveGyro]
+i2cConnections=[GroveLCDDisplay,GroveSixAxisAccelerometer,GroveNFCTagModule,GroveGyro,Grove9AxisIMU]
 allSensors=digitalSensors+analogSensors+digitalOutputs+i2cConnections
