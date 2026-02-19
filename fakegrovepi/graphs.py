@@ -54,7 +54,7 @@ def on_value(graphName,value):
         The name of the graph, which should be the same as passed to set_graph_style
     value: float
         The value you want to add to the graph. If you add None, it doesn't change the graph, 
-        this allows you to directly pass in the output of a \`BlockAverageFilter\` or similar 
+        this allows you to directly pass in the output of a \\`BlockAverageFilter\\` or similar 
         which return None when there is no new value.
     """
     global _rows,_cols,_graph_styles,_graph_values
