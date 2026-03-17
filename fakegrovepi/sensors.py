@@ -5,6 +5,7 @@ import io, csv
 import grove6axis, grove9axis, grovepi, grovegyro
 from contextlib import contextmanager
 import re
+import time
 
 ### TODO - 1 include grove lcd output (normally)
 ### TODO - 2 make graph equivalent on LCDs, using custom characters http://www.matidavid.com/pic/LCD%20interfacing/lcd-custom-character.htm
